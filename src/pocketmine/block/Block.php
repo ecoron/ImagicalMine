@@ -964,7 +964,45 @@ class Block extends Position implements Metadatable{
 	final public function setDamage($meta){
 		$this->meta = $meta & 0x0f;
 	}
-
+	
+	public static function blockHash($x, $y, $z){
+		return PHP_INT_SIZE === 8 ? (($x & 0xFFFFFFF) << 35) | (($y & 0x7f) << 28) | ($z & 0xFFFFFFF) : $x . ":" . $y .":". $z;
+	}
+	
+	public function getRedstoneStorage(){
+		$hash = $this->blockHash($this->x, $this->y, $this->z);
+		if(isset($this->getLevel()->getServer()->RedstoneStorage[$hash]))
+			return $this->getLevel()->getServer()->RedstoneStorage[$hash];
+		else
+			return false;
+	}
+	
+	public function getPowerSource(){
+		$storage = $this->getRedstoneStorage();
+		if($storage)
+			return $storage['PowerSource'];
+		else
+			return array();
+	}
+	
+	public function getDirectPowerSource(){
+		$storage = $this->getRedstoneStorage();
+		if($storage)
+			return $storage['DirectPowerSource'];
+		else
+			return array();
+	}
+	
+	public function setPowerSource($array){
+		$hash = $this->blockHash($this->x, $this->y, $this->z);
+		$this->getLevel()->getServer()->RedstoneStorage[$hash]['PowerSource']=$array;
+	}
+	
+	public function setDirectPowerSource($array){
+		$hash = $this->blockHash($this->x, $this->y, $this->z);
+		$this->getLevel()->getServer()->RedstoneStorage[$hash]['DirectPowerSource'] = $array;
+	}
+	
 	/**
 	 * @return int 0-15
 	 */
