@@ -279,6 +279,8 @@ class Server{
 
 	/** @var Level */
 	private $levelDefault = null;
+	
+	public $RedstoneStorage = array();
 
 	/**
 	 * @return string
@@ -1724,6 +1726,14 @@ class Server{
 		if($this->getProperty("ticks-per.autosave", 6000) > 0){
 			$this->autoSaveTicks = (int) $this->getProperty("ticks-per.autosave", 6000);
 		}
+		
+		if($this->isAllowRedstoneCalculation()){
+			$Rfile = $this->getDataPath() . "worlds/RedstoneData.dat";
+			if(file_exists($Rfile))
+				$this->RedstoneStorage=json_decode(file_get_contents($Rfile),true);
+		}
+		
+		
 
 		$this->enablePlugins(PluginLoadOrder::POSTWORLD);
 
@@ -2015,6 +2025,7 @@ class Server{
 	 * Shutdowns the server correctly
 	 */
 	public function shutdown(){
+		file_put_contents($this->getDataPath() . "worlds/RedstoneData.dat",json_encode($this->RedstoneStorage));
 		if($this->isRunning){
 			$killer = new ServerKiller(90);
 			$killer->start();
@@ -2027,7 +2038,7 @@ class Server{
 		if($this->hasStopped){
 			return;
 		}
-
+		
 		try{
 			if(!$this->isRunning()){
 				$this->sendUsage(SendUsageTask::TYPE_CLOSE);
