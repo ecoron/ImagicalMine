@@ -205,7 +205,11 @@ class Level implements ChunkManager, Metadatable{
 	/** @var ReversePriorityQueue */
 	private $updateQueue;
 	private $updateQueueIndex = [];
-
+	
+	/** @var ReversePriorityQueue */
+	private $RedstoneQueue;
+	private $RedstoneQueueIndex = [];
+	
 	/** @var Player[][] */
 	private $chunkSendQueue = [];
 	private $chunkSendTasks = [];
@@ -360,6 +364,9 @@ class Level implements ChunkManager, Metadatable{
 		$this->updateQueue = new ReversePriorityQueue();
 		$this->updateQueue->setExtractFlags(\SplPriorityQueue::EXTR_BOTH);
 		$this->time = (int) $this->provider->getTime();
+		
+		$this->RedstoneQueue = new ReversePriorityQueue();
+		$this->RedstoneQueue->setExtractFlags(\SplPriorityQueue::EXTR_BOTH);
 
 		$this->chunkTickRadius = min($this->server->getViewDistance(), max(1, (int) $this->server->getProperty("chunk-ticking.tick-radius", 4)));
 		$this->chunksPerTick = (int) $this->server->getProperty("chunk-ticking.per-tick", 40);
@@ -696,6 +703,16 @@ class Level implements ChunkManager, Metadatable{
 			$block = $this->getBlock($this->updateQueue->extract()["data"]);
 			unset($this->updateQueueIndex[Level::blockHash($block->x, $block->y, $block->z)]);
 			$block->onUpdate(self::BLOCK_UPDATE_SCHEDULED);
+		}
+		$this->timings->doTickPending->stopTiming();
+		
+		//Do Redstone updates
+		$this->timings->doTickPending->startTiming();
+		while($this->RedstoneQueue->count() > 0 and $this->RedstoneQueue->current()["priority"] <= $currentTick){
+			$block = $this->getBlock($this->RedstoneQueue->extract()["data"]);
+			//RTD : Get Redstone Data From Update Index Array
+			unset($this->RedstoneQueueIndex[Level::blockHash($block->x, $block->y, $block->z)]);
+			$block->onRedstoneUpdate($PowerSource,$DirectPowerSource,$Power);
 		}
 		$this->timings->doTickPending->stopTiming();
 
@@ -1155,7 +1172,20 @@ class Level implements ChunkManager, Metadatable{
 		$this->updateQueueIndex[$index] = $delay;
 		$this->updateQueue->insert(new Vector3((int) $pos->x, (int) $pos->y, (int) $pos->z), (int) $delay + $this->server->getTick());
 	}
-
+	
+	/**
+	 * @param Vector3 $pos
+	 * @param int     $delay
+	 */
+	public function RedstoneUpdate(Vector3 $pos, $delay){
+		if(isset($this->RedstoneQueueIndex[$index = Level::blockHash($pos->x, $pos->y, $pos->z)]) and $this->updateQueueIndex[$index] <= $delay){
+			return;
+		}
+		//RTD : Save Redstone Data to RedstoneQueueIndex
+		$this->RedstoneQueueIndex[$index] = $delay;
+		$this->RedstoneQueue->insert(new Vector3((int) $pos->x, (int) $pos->y, (int) $pos->z), (int) $delay + $this->server->getTick());
+	}
+	
 	/**
 	 * @param AxisAlignedBB $bb
 	 * @param bool          $targetFirst
