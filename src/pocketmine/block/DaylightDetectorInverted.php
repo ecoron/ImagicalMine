@@ -60,7 +60,7 @@ class DaylightDetectorInverted extends Transparent implements Redstone{
 		return false;
 	}
 
-	public function onRedstoneUpdate($type){
+	public function onRedstoneUpdate($PowerSource = null,$DirectPowerSource = null,$Power = 0){
 		if($type === Level::BLOCK_UPDATE_SCHEDULED || $type === Level::BLOCK_UPDATE_NORMAL){
 			$this->power=15-$this->getLightLevel();
 			$this->getLevel()->scheduleUpdate($this, 300);

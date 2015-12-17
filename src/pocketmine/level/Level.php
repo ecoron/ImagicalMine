@@ -1181,8 +1181,8 @@ class Level implements ChunkManager, Metadatable{
 	 * @param Vector3 $pos
 	 * @param int     $delay
 	 */
-	public function RedstoneUpdate(Vector3 $pos, $delay, $PowerSource, $DirectPowerSource, $Power){
-		if(isset($this->RedstoneQueueIndex[$index = Level::blockHash($pos->x, $pos->y, $pos->z)]) and $this->updateQueueIndex[$index] <= $delay){
+	public function RedstoneUpdate(Vector3 $pos, $delay, $PowerSource = null, $DirectPowerSource = null, $Power = 0){
+		if(isset($this->RedstoneQueueIndex[$index = Level::blockHash($pos->x, $pos->y, $pos->z)]) and $this->updateQueueIndex[$index]['Delay'] <= $delay){
 			return;
 		}
 		//RTD : Save Redstone Data to RedstoneQueueIndex

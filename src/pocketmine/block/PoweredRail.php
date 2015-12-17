@@ -74,7 +74,7 @@ class PoweredRail extends Flowable implements RedstoneTools{
 		return false;
 	}
 
-	public function onRedstoneUpdate($type){
+	public function onRedstoneUpdate($PowerSource = null,$DirectPowerSource = null,$Power = 0){
 		if($this->isActivitedByRedstone() && !$this->isPowered()){
 			$this->togglePowered();
 		}

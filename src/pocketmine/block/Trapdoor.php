@@ -158,7 +158,7 @@ class Trapdoor extends Transparent implements Redstone{
 		return true;
 	}
 	
-	public function onRedstoneUpdate($type){
+	public function onRedstoneUpdate($PowerSource = null,$DirectPowerSource = null,$Power = 0){
 		if($this->isActivitedByRedstone() and $this->meta < 4){
 			$this->meta = $this->meta+4;
 			$this->getLevel()->setBlock($this, $this);

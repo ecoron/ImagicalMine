@@ -803,7 +803,7 @@ class Block extends Position implements Metadatable{
 	 *
 	 * @return void
 	 */
-	public function onRedstoneUpdate($type){
+	public function onRedstoneUpdate($PowerSource = null,$DirectPowerSource = null,$Power = 0){
 
 	}
 
