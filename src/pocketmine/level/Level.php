@@ -711,7 +711,11 @@ class Level implements ChunkManager, Metadatable{
 		while($this->RedstoneQueue->count() > 0 and $this->RedstoneQueue->current()["priority"] <= $currentTick){
 			$block = $this->getBlock($this->RedstoneQueue->extract()["data"]);
 			//RTD : Get Redstone Data From Update Index Array
-			unset($this->RedstoneQueueIndex[Level::blockHash($block->x, $block->y, $block->z)]);
+			$hash = Level::blockHash($block->x, $block->y, $block->z);
+			$PowerSource = RedstoneQueueIndex[$hash]['PowerSource'];
+			$DirectPowerSource = RedstoneQueueIndex[$hash]['DirectPowerSource'];
+			$Power = RedstoneQueueIndex[$hash]['Power'];
+			unset($this->RedstoneQueueIndex[$hash]);
 			$block->onRedstoneUpdate($PowerSource,$DirectPowerSource,$Power);
 		}
 		$this->timings->doTickPending->stopTiming();
@@ -1177,12 +1181,15 @@ class Level implements ChunkManager, Metadatable{
 	 * @param Vector3 $pos
 	 * @param int     $delay
 	 */
-	public function RedstoneUpdate(Vector3 $pos, $delay){
+	public function RedstoneUpdate(Vector3 $pos, $delay, $PowerSource, $DirectPowerSource, $Power){
 		if(isset($this->RedstoneQueueIndex[$index = Level::blockHash($pos->x, $pos->y, $pos->z)]) and $this->updateQueueIndex[$index] <= $delay){
 			return;
 		}
 		//RTD : Save Redstone Data to RedstoneQueueIndex
-		$this->RedstoneQueueIndex[$index] = $delay;
+		$this->RedstoneQueueIndex[$index]['Delay'] = $delay;
+		$this->RedstoneQueueIndex[$index]['PowerSource'] = $PowerSource;
+		$this->RedstoneQueueIndex[$index]['DirectPowerSource'] = $DirectPowerSource;
+		$this->RedstoneQueueIndex[$index]['Power'] = $Power;
 		$this->RedstoneQueue->insert(new Vector3((int) $pos->x, (int) $pos->y, (int) $pos->z), (int) $delay + $this->server->getTick());
 	}
 	
