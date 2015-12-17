@@ -71,8 +71,8 @@ class RedstoneWire extends Flowable implements Redstone{
 		$down = $this->getSide(0);
 		if($down instanceof Transparent && $down->getId() !== Block::GLOWSTONE_BLOCK) return false;
 		else{
-			$this->setPowerSource(array("aaa"=>"12"));
 			$this->getLevel()->setBlock($block, $this, true, true);
+			$this->BroadcastRedstoneUpdate($PowerSource = $this->getblockHash(),$Power = 0);
 			return true;
 		}
 	}
@@ -88,7 +88,7 @@ class RedstoneWire extends Flowable implements Redstone{
 		return true;
 	}
 
-	public function onRedstoneUpdate($PowerSource = null,$DirectPowerSource = null,$Power = 0){
+	public function onRedstoneUpdate($PowerSource = null,$Power = 0){
 			$fetchedPower = $this->fetchPower() - 1;
 			if($fetchedPower == $this->getPower())
 				return true;
@@ -108,30 +108,9 @@ class RedstoneWire extends Flowable implements Redstone{
 	}
 
 	public function onBreak(Item $item){
-		$this->getSide(0)->onRedstoneUpdate(-1);
-		for($side = 2; $side <= 5; $side++){
-			$around=$this->getSide($side);
-			$around->onRedstoneUpdate(-1);
-			if(!$around instanceof Transparent){
-				$around->getSide(1)-> onRedstoneUpdate(-1);
-			}else{
-				if($around->id==self::AIR){
-					$aroundDown = $around->getSide(0);
-					if($aroundDown instanceof RedstoneTools)
-						$aroundDown -> onRedstoneUpdate(-1);
-				}
-			}
-		}
+		$this->BroadcastRedstoneUpdate($PowerSource = $this->getblockHash(),$Power = -1);
 		return $this->getLevel()->setBlock($this, new Air(), true, true);
 	}
-/*	public function getPower(){
-		$power = 0;
-		for($i = 0; $i <= 5; $i++){
-			$power = (($this->getSide($i)->getPower() - 1) > $power?$this->getSide($i)->getPower() - 1:$power);
-		}
-		$this->setDamage($power & 0x00);
-		return $power;
-	}*/
 
 	public function __toString(){
 		return $this->getName() . (isPowered()?"":"NOT ") . "POWERED";
