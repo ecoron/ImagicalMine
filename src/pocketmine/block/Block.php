@@ -805,19 +805,19 @@ class Block extends Position implements Metadatable{
 	 *
 	 * @return void
 	 */
-	public function onRedstoneUpdate($PowerSource = null,$DirectPowerSource = null,$Power = 0){
+	public function onRedstoneUpdate($PowerSource = null,$Power = 0){
 
 	}
 	
-	public function BroadcastRedstoneUpdate($PowerSource = null,$DirectPowerSource = null,$Power = 0){
+	public function BroadcastRedstoneUpdate($PowerSource = null,$Power = 0){
 		for($side = 0; $side <= 5; $side++){
 			$around=$this->getSide($side);
-			$this -> getLevel() -> setRedstoneUpdate($around,self::REDSTONEDELY,$PowerSource,$DirectPowerSource,$Power);
+			$this -> getLevel() -> setRedstoneUpdate($around,self::REDSTONEDELY,$PowerSource,$Power);
 			if(!$around instanceof Transparent){
-				$this -> getLevel() -> setRedstoneUpdate($around->getSide(1),self::REDSTONEDELY,$PowerSource,$DirectPowerSource,$Power);
+				$this -> getLevel() -> setRedstoneUpdate($around->getSide(1),self::REDSTONEDELY,$PowerSource,$Power);
 			}else{
 				if($around->id==self::AIR){
-					$this -> getLevel() -> setRedstoneUpdate($around->getSide(0),self::REDSTONEDELY,$PowerSource,$DirectPowerSource,$Power);
+					$this -> getLevel() -> setRedstoneUpdate($around->getSide(0),self::REDSTONEDELY,$PowerSource,$Power);
 				}
 			}
 		}
@@ -991,22 +991,9 @@ class Block extends Position implements Metadatable{
 			return array();
 	}
 	
-	public function getDirectPowerSource(){
-		$storage = $this->getRedstoneStorage();
-		if($storage)
-			return $storage['DirectPowerSource'];
-		else
-			return array();
-	}
-	
 	public function setPowerSource($array){
 		$hash = $this->blockHash($this->x, $this->y, $this->z);
 		$this->getLevel()->getServer()->RedstoneStorage[$hash]['PowerSource']=$array;
-	}
-	
-	public function setDirectPowerSource($array){
-		$hash = $this->blockHash($this->x, $this->y, $this->z);
-		$this->getLevel()->getServer()->RedstoneStorage[$hash]['DirectPowerSource'] = $array;
 	}
 	
 	/**
