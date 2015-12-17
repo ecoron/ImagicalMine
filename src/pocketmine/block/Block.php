@@ -364,6 +364,8 @@ class Block extends Position implements Metadatable{
 	const GLOWING_OBSIDIAN = 246;
 	const NETHER_REACTOR = 247;
 	const RESERVED = 255;
+	
+	const REDSTONEDELY = 2;
 
 	/** @var \SplFixedArray */
 	public static $list = null;
@@ -806,7 +808,21 @@ class Block extends Position implements Metadatable{
 	public function onRedstoneUpdate($PowerSource = null,$DirectPowerSource = null,$Power = 0){
 
 	}
-
+	
+	public function BroadcastRedstoneUpdate($PowerSource = null,$DirectPowerSource = null,$Power = 0){
+		for($side = 0; $side <= 5; $side++){
+			$around=$this->getSide($side);
+			$this -> getLevel() -> setRedstoneUpdate($around,self::REDSTONEDELY,$PowerSource,$DirectPowerSource,$Power);
+			if(!$around instanceof Transparent){
+				$this -> getLevel() -> setRedstoneUpdate($around->getSide(1),self::REDSTONEDELY,$PowerSource,$DirectPowerSource,$Power);
+			}else{
+				if($around->id==self::AIR){
+					$this -> getLevel() -> setRedstoneUpdate($around->getSide(0),self::REDSTONEDELY,$PowerSource,$DirectPowerSource,$Power);
+				}
+			}
+		}
+	}
+	
 	/**
 	 * Do actions when activated by Item. Returns if it has done anything
 	 *
@@ -948,7 +964,14 @@ class Block extends Position implements Metadatable{
 		$this->meta = $meta & 0x0f;
 	}
 	
-	public static function blockHash($x, $y, $z){
+	public function blockHash($x, $y, $z){
+		return PHP_INT_SIZE === 8 ? (($x & 0xFFFFFFF) << 35) | (($y & 0x7f) << 28) | ($z & 0xFFFFFFF) : $x . ":" . $y .":". $z;
+	}
+	
+	public function getblockHash(){
+		$x = $this->x;
+		$y = $this->y;
+		$z = $this->z;
 		return PHP_INT_SIZE === 8 ? (($x & 0xFFFFFFF) << 35) | (($y & 0x7f) << 28) | ($z & 0xFFFFFFF) : $x . ":" . $y .":". $z;
 	}
 	
