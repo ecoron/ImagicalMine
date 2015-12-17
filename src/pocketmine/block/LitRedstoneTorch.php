@@ -104,7 +104,25 @@ class LitRedstoneTorch extends Flowable implements Redstone{
 
 		return false;
 	}
-
+	
+	public function onBreak(Item $item){
+		$this->getSide(0)->onRedstoneUpdate(-1);
+		for($side = 2; $side <= 5; $side++){
+			$around=$this->getSide($side);
+			$around->onRedstoneUpdate(-1);
+			if(!$around instanceof Transparent){
+				$around->getSide(1)-> onRedstoneUpdate(-1);
+			}else{
+				if($around->id==self::AIR){
+					$aroundDown = $around->getSide(0);
+					if($aroundDown instanceof RedstoneTools)
+						$aroundDown -> onRedstoneUpdate(-1);
+				}
+			}
+		}
+		return $this->getLevel()->setBlock($this, new Air(), true, true);
+	}
+	
 	public function getDrops(Item $item){
 		return [
 			[$this->id, 0, 1],
