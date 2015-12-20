@@ -109,7 +109,14 @@ class HeavyWeightedPressurePlate extends Transparent implements Redstone{
 	 */
 	public function togglePowered(){
 		$this->meta ^= 0x01;
-		$this->isPowered()?$this->power=15:$this->power=0;
+		if($this->isPowered()){
+			$this->power = 15;
+			$this->BroadcastRedstoneUpdate($this, $this->power);
+		}
+		else{
+			$this->power = 0;
+			$this->BroadcastRedstoneUpdate($this, -1);
+		}
 		$this->getLevel()->addSound(new GenericSound($this, 1000));
 		$this->getLevel()->setBlock($this, $this, true, true);
 	}

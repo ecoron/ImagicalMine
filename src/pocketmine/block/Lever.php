@@ -128,6 +128,12 @@ class Lever extends Flowable implements Redstone{
 	 *        	whether or not the button is powered
 	 */
 	public function togglePowered(){
-		$this->isPowered()?$this->power=15:$this->power=0;
+		if($this->isPowered()){
+			$this->power=15;
+			$this->BroadcastRedstoneUpdate($this,$this->power);
+		}else{
+			$this->power=0;
+			$this->BroadcastRedstoneUpdate($this,-1);
+		}
 	}
 }

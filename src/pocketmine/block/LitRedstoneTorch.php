@@ -29,6 +29,7 @@ namespace pocketmine\block;
 use pocketmine\item\Item;
 use pocketmine\level\Level;
 use pocketmine\Player;
+use pocketmine\math\Vector3;
 
 class LitRedstoneTorch extends Flowable implements Redstone{
 
@@ -70,8 +71,9 @@ class LitRedstoneTorch extends Flowable implements Redstone{
 				return Level::BLOCK_UPDATE_NORMAL;
 			}
 			
-			if($this->getSide($faces[$side] , 2)->getPower() > 0){
-				$this->getLevel()->setBlock($this, Block::UNLIT_REDSTONE_TORCH);
+			if($this->getSide(0,2)->getId() === Block::LIT_REDSTONE_TORCH){
+				$this->getLevel()->setBlock($this, Block::UNLIT_REDSTONE_TORCH, true, true);
+				$this->BroadcastRedstoneUpdate($this,-1);
 				
 				return Level::BLOCK_UPDATE_NORMAL;
 			}
@@ -98,7 +100,8 @@ class LitRedstoneTorch extends Flowable implements Redstone{
 		}elseif($below->isTransparent() === false){
 			$this->meta = 0;
 			$this->getLevel()->setBlock($block, $this, true, true);
-			$this->BroadcastRedstoneUpdate($PowerSource = $this->getblockHash(),$Power = 15);
+			$this->BroadcastRedstoneUpdate($this,15);
+			$this->BroadcastRedstoneUpdate($this->getSide(1,2),15);//power above
 			return true;
 		}
 
@@ -106,7 +109,8 @@ class LitRedstoneTorch extends Flowable implements Redstone{
 	}
 	
 	public function onBreak(Item $item){
-		$this->BroadcastRedstoneUpdate($PowerSource = $this->getblockHash(),$Power = -1);
+		$this->BroadcastRedstoneUpdate($this, -1);
+			$this->BroadcastRedstoneUpdate($this->getSide(1,2),-1);//unpower above
 		return $this->getLevel()->setBlock($this, new Air(), true, true);
 	}
 	
