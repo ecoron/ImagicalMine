@@ -13,7 +13,7 @@
  * 
  * This program is a third party build by ImagicalMine.
  * 
- * PocketMine is free software: you can redistribute it and/or modify
+ * ImagicalMine is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -28,6 +28,7 @@ namespace pocketmine;
 use pocketmine\block\Block;
 use pocketmine\command\CommandSender;
 use pocketmine\entity\Arrow;
+use pocketmine\entity\Boat;
 use pocketmine\entity\AttributeManager;
 use pocketmine\entity\Effect;
 use pocketmine\entity\Entity;
@@ -752,6 +753,7 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 		$this->spawned = true;
 		
 		$this->sendSettings();
+		$this->setSpeed(0.1);
 		$this->sendPotionEffects($this);
 		$this->sendData($this);
 		$this->inventory->sendContents($this);
@@ -766,7 +768,7 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 		
 		$this->server->getPluginManager()->callEvent($ev = new PlayerRespawnEvent($this, $pos));
 		
-		$pos = $ev->getRespawnPosition();
+		$pos = $ev->getRespawnPosition()->add(0, 0.2, 0);;
 		
 		$pk = new RespawnPacket();
 		$pk->x = $pos->x;
@@ -798,10 +800,6 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 		
 		$this->spawnToAll();
 		
-		if($this->server->getUpdater()->hasUpdate() and $this->hasPermission(Server::BROADCAST_CHANNEL_ADMINISTRATIVE)){
-			$this->server->getUpdater()->showPlayerUpdate($this);
-		}
-		
 		if($this->getHealth() <= 0){
 			$pk = new RespawnPacket();
 			$pos = $this->getSpawn();
@@ -810,6 +808,9 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 			$pk->z = $pos->z;
 			$this->dataPacket($pk);
 		}
+
+		$this->getLevel()->sendWeather($this);
+
 	}
 
 	protected function orderChunks(){
@@ -1982,7 +1983,14 @@ Item::APPLE => 4,Item::MUSHROOM_STEW => 6,Item::BEETROOT_SOUP => 5,Item::BREAD =
 				
 				break;
 			case ProtocolInfo::MOVE_PLAYER_PACKET:
-				
+				if($this->riding instanceof Entity){
+					$entity = $this->riding;
+					if($entity instanceof Boat){
+						$entity->x = $packet->x;
+						$entity->y = $packet->y;
+						$entity->z = $packet->z;
+					}
+				}
 				$newPos = new Vector3($packet->x, $packet->y - $this->getEyeHeight(), $packet->z);
 				
 				$revert = false;
@@ -2319,6 +2327,7 @@ Item::APPLE => 4,Item::MUSHROOM_STEW => 6,Item::BEETROOT_SOUP => 5,Item::BREAD =
 						
 						$this->setHealth($this->getMaxHealth());
 						$this->setFood(20);
+						$this->setSpeed(0.1);
 						$this->setExp(0);
 						$this->setExpLevels(0);
 						$this->getAttribute()->resetAll();
@@ -2443,6 +2452,19 @@ Item::APPLE => 4,Item::MUSHROOM_STEW => 6,Item::BEETROOT_SOUP => 5,Item::BREAD =
 
 				{
 					$cancelled = true;
+				}
+				
+				if($target instanceof Boat){
+					if($packet->action === 1){
+						$this->linkEntity($target);
+					}elseif($packet->action === 2){
+						if ($this->linkedEntity == $target) {
+							$target->setLinked(0, $this);
+						}
+					}elseif($packet->action === 3){
+						$this->setLinked(0, $target);
+					}
+					return;
 				}
 				
 				if($target instanceof Entity and $this->getGamemode() !== Player::VIEW and $this->isAlive() and $target->isAlive()){
@@ -2642,10 +2664,30 @@ Item::APPLE => 4,Item::MUSHROOM_STEW => 6,Item::BEETROOT_SOUP => 5,Item::BREAD =
 				$canCraft = true;
 				
 				if($recipe instanceof ShapedRecipe){
-					for($x = 0; $x < 3 and $canCraft; ++$x){
-						for($y = 0; $y < 3; ++$y){
+					$client = [2, 2];
+					for($x = 0; $x < $client[1]; ++$x){
+						for($y = 0; $y < $client[0]; ++$y){
 							$item = $packet->input[$y * 3 + $x];
-							$ingredient = $recipe->getIngredient($x, $y);
+							if($item->getId() !== Item::AIR){
+								if($client[0] > $y) $client[0] = $y; // top
+								if($client[1] > $x) $client[1] = $x;
+							}
+						}
+					}
+					$server = [2, 2];
+					$map = $recipe->getIngredientMap();
+					foreach($map as $y => $yVal){
+						foreach($yVal as $x => $item){
+							if($item->getId() !== Item::AIR){
+								if($server[0] > $y) $server[0] = $y; // top
+								if($server[1] > $x) $server[1] = $x;
+							}
+						}
+					}
+					for($x = $client[0]; $x < 3 and $canCraft; ++$x){
+						for($y = $client[1]; $y < 3; ++$y){
+							$item = $packet->input[$y * 3 + $x];
+							$ingredient = $recipe->getIngredient($server[1] + $x - $client[1], $server[0] + $y - $client[0]);
 							if($item->getCount() > 0){
 								if($ingredient === null or !$ingredient->deepEquals($item, $ingredient->getDamage() !== null, $ingredient->getCompoundTag() !== null)){
 									$canCraft = false;
@@ -2654,7 +2696,7 @@ Item::APPLE => 4,Item::MUSHROOM_STEW => 6,Item::BEETROOT_SOUP => 5,Item::BREAD =
 							}
 						}
 					}
-				}
+				}			
 				elseif($recipe instanceof ShapelessRecipe){
 					$needed = $recipe->getIngredientList();
 					
@@ -2704,7 +2746,7 @@ Item::APPLE => 4,Item::MUSHROOM_STEW => 6,Item::BEETROOT_SOUP => 5,Item::BREAD =
 				foreach($ingredients as $ingredient){
 					$slot = -1;
 					foreach($this->inventory->getContents() as $index => $i){
-						if($ingredient->getId() !== 0 and $ingredient->deepEquals($i, $i->getDamage() !== null) and ($i->getCount() - $used[$index]) >= 1){
+						if($ingredient->getId() !== 0 and $ingredient->deepEquals($i, $ingredient->getDamage() !== null) and ($i->getCount() - $used[$index]) >= 1){
 							$slot = $index;
 							$used[$index]++;
 							break;
@@ -2804,6 +2846,22 @@ Item::APPLE => 4,Item::MUSHROOM_STEW => 6,Item::BEETROOT_SOUP => 5,Item::BREAD =
 				if($packet->windowid === 0){ // Our inventory
 					if($packet->slot >= $this->inventory->getSize()){
 						break;
+					}
+					if(isset($packet->item)){
+						if($packet->item->getCompoundTag() != $this->inventory->getItem($packet->slot)->getCompoundTag()){
+							$t = explode("\000",$packet->item->getCompoundTag());
+							if(isset($t['8']) and $t['8'] != ""){
+								if(strstr($t['7'],"Name")){
+									if(isset($this->windowIndex['3'])){
+										$this->decreaseExpLevel(1);
+										$item = $packet->item;
+										$item->setCustomName($t['8']);
+										$transaction = new BaseTransaction($this->inventory, $packet->slot, $this->inventory->getItem($packet->slot), $item);
+										break;
+									}
+								}
+							}
+						}
 					}
 					if($this->isCreative()){
 						if(Item::getCreativeItemIndex($packet->item) !== -1){
@@ -3290,7 +3348,7 @@ Item::APPLE => 4,Item::MUSHROOM_STEW => 6,Item::BEETROOT_SOUP => 5,Item::BREAD =
 		if($this->spawned === true){
 			$this->foodTick = 0;
 			$this->getAttribute()->getAttribute(AttributeManager::MAX_HEALTH)->setValue($amount);
- 			if($amount <= 0){		 	
+ 			if($amount < 0 or $amount == 0){		 	
 			        $pk = new RespawnPacket();	
 				$pos = $this->getSpawn();		
 				$pk->x = $pos->x;		
@@ -3299,6 +3357,17 @@ Item::APPLE => 4,Item::MUSHROOM_STEW => 6,Item::BEETROOT_SOUP => 5,Item::BREAD =
 				$this->dataPacket($pk);		
  			}
 		}
+	}
+
+	protected $movementSpeed = 0.1;
+
+	public function setSpeed($amount){
+		$this->movementSpeed = $amount;
+		$this->getAttribute()->getAttribute(AttributeManager::MOVEMENTSPEED)->setValue($amount);
+	}
+
+	public function getSpeed(){
+		return $this->movementSpeed;
 	}
 
 	public function setFood($amount){
@@ -3427,7 +3496,7 @@ Item::APPLE => 4,Item::MUSHROOM_STEW => 6,Item::BEETROOT_SOUP => 5,Item::BREAD =
 			$pk->eid = 0;
 			$pk->event = EntityEventPacket::HURT_ANIMATION;
 			$this->dataPacket($pk);
-	                if($this->getHealth() <= 0){
+	                if($this->getHealth() < 0 or $this->getHealth() == 0){
                                $pk = new RespawnPacket();
                                $pos = $this->getSpawn();
                                $pk->x = $pos->x;
@@ -3548,6 +3617,8 @@ Item::APPLE => 4,Item::MUSHROOM_STEW => 6,Item::BEETROOT_SOUP => 5,Item::BREAD =
 			$this->resetFallDistance();
 			$this->nextChunkOrderRun = 0;
 			$this->newPosition = null;
+
+			$this->getLevel()->sendWeather($this);
 		}
 	}
 

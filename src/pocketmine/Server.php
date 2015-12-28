@@ -13,7 +13,7 @@
  * 
  * This program is a third party build by ImagicalMine.
  * 
- * PocketMine is free software: you can redistribute it and/or modify
+ * ImagicalMine is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -25,8 +25,8 @@
 */
 
 /**
- * PocketMine-MP is the Minecraft: PE multiplayer server software
- * Homepage: http://www.pocketmine.net/
+ * ImagicalMine is the Minecraft: PE multiplayer server software
+ * Homepage: http://imagicalmine.imagicalcorp.ml/
  */
 namespace pocketmine;
 
@@ -119,7 +119,6 @@ use pocketmine\tile\FlowerPot;
 use pocketmine\tile\Furnace;
 use pocketmine\tile\Sign;
 use pocketmine\tile\Tile;
-use pocketmine\updater\AutoUpdater;
 use pocketmine\utils\Binary;
 use pocketmine\utils\Config;
 use pocketmine\utils\LevelException;
@@ -132,6 +131,7 @@ use pocketmine\utils\TextWrapper;
 use pocketmine\utils\Utils;
 use pocketmine\utils\UUID;
 use pocketmine\utils\VersionString;
+use pocketmine\entity\Boat;
 
 /**
  * The class that manages everything
@@ -284,7 +284,7 @@ class Server{
 	 * @return string
 	 */
 	public function getName(){
-		return "PocketMine-MP";
+		return "ImagicalMine";
 	}
 
 	/**
@@ -604,13 +604,6 @@ class Server{
 	}
 
 	/**
-	 * @return AutoUpdater
-	 */
-	public function getUpdater(){
-		return $this->updater;
-	}
-
-	/**
 	 * @return PluginManager
 	 */
 	public function getPluginManager(){
@@ -818,7 +811,7 @@ class Server{
 		$nbt->Motion->setTagType(NBT::TAG_Double);
 		$nbt->Rotation->setTagType(NBT::TAG_Float);
 
-		if(file_exists($path . "$name.yml")){ //Importing old PocketMine-MP files
+		if(file_exists($path . "$name.yml")){ //Importing old ImagicalMine files
 			$data = new Config($path . "$name.yml", Config::YAML, []);
 			$nbt["playerGameType"] = (int) $data->get("gamemode");
 			$nbt["Level"] = $data->get("position")["level"];
@@ -1500,7 +1493,7 @@ class Server{
                 echo("                    |___/                                    \n");
                 echo("                                                             \n");                           
 
-		$this->logger->info("Loading pocketmine.yml...");
+		$this->logger->info("Loading imagicalmine.yml...");
 		if(!file_exists($this->dataPath . "pocketmine.yml")){
 			$content = file_get_contents($this->filePath . "src/pocketmine/resources/pocketmine.yml");
 			if($version->isDev()){
@@ -1625,8 +1618,8 @@ class Server{
 			$this->getApiVersion()
 		]));
 		$this->logger->info($this->getLanguage()->translateString("pocketmine.server.license", [$this->getName()]));
-		$this->logger->info("This is a third-party PM Build!");
-		$this->logger->info("Please report any issues here: https://github.com/ImagicalCorp/PocketMine-0.13.0/issues");
+                $this->logger->info("Welcome to ImagicalMine - Server software for Minecraft : Pocket Edition.");
+		$this->logger->info("If you find any bugs, please report them at https://github.com/ImagicalCorp/ImagicalMine/issues");
 		Timings::init();
 
 		$this->consoleSender = new ConsoleCommandSender();
@@ -1660,8 +1653,6 @@ class Server{
 		$this->network->registerInterface(new RakLibInterface($this));
 
 		$this->pluginManager->loadPlugins($this->pluginPath);
-
-		$this->updater = new AutoUpdater($this, $this->getProperty("auto-updater.host", "www.pocketmine.net"));
 
 		$this->enablePlugins(PluginLoadOrder::STARTUP);
 
@@ -2091,7 +2082,7 @@ class Server{
 	}
 
 	/**
-	 * Starts the PocketMine-MP server and starts processing ticks and packets
+	 * Starts the ImagicalMine server and starts processing ticks and packets
 	 */
 	public function start(){
 		if($this->getConfigBoolean("enable-query", true) === true){
@@ -2619,7 +2610,7 @@ class Server{
 		Entity::registerEntity(Villager::class);
 		Entity::registerEntity(Zombie::class);
 		Entity::registerEntity(Squid::class);
-
+		Entity::registerEntity(Boat::class);
 		Entity::registerEntity(Human::class, true);
 	}
 

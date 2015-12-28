@@ -67,8 +67,12 @@ use pocketmine\event\level\SpawnChangeEvent;
 use pocketmine\event\LevelTimings;
 use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\Timings;
+use pocketmine\event\weather\WeatherEvent;
+use pocketmine\event\weather\ThunderChangeEvent;
+use pocketmine\event\weather\WeatherChangeEvent;
 use pocketmine\inventory\InventoryHolder;
 use pocketmine\item\Item;
+use pocketmine\item\Tool;
 use pocketmine\level\format\Chunk;
 use pocketmine\level\format\FullChunk;
 use pocketmine\level\format\generic\BaseLevelProvider;
@@ -119,6 +123,8 @@ use pocketmine\level\sound\Sound;
 use pocketmine\entity\Effect;
 use pocketmine\level\particle\DestroyBlockParticle;
 
+use pocketmine\network\protocol\AddEntityPacket;
+
 #include <rules/Level.h>
 
 class Level implements ChunkManager, Metadatable{
@@ -133,6 +139,13 @@ class Level implements ChunkManager, Metadatable{
 	const BLOCK_UPDATE_SCHEDULED = 3;
 	const BLOCK_UPDATE_WEAK = 4;
 	const BLOCK_UPDATE_TOUCH = 5;
+	
+	const REDSTONE_UPDATE_PLACE = 1;
+	const REDSTONE_UPDATE_NORMAL = 2;
+	const REDSTONE_UPDATE_BLOCK_CHARGE = 3;
+	const REDSTONE_UPDATE_BLOCK_UNCHARGE = 4;
+	const REDSTONE_UPDATE_LOSTPOWER = 5;
+	const REDSTONE_UPDATE_BREAK = 6;
 
 	const TIME_DAY = 0;
 	const TIME_SUNSET = 12000;
@@ -206,6 +219,9 @@ class Level implements ChunkManager, Metadatable{
 	private $updateQueue;
 	private $updateQueueIndex = [];
 
+	private $updateRedstoneQueue;
+	private $updateRedstoneQueueIndex = [];
+	
 	/** @var Player[][] */
 	private $chunkSendQueue = [];
 	private $chunkSendTasks = [];
@@ -228,7 +244,7 @@ class Level implements ChunkManager, Metadatable{
 	private $temporalPosition;
 	/** @var Vector3 */
 	private $temporalVector;
-
+	public $temporalVector2;
 	/** @var \SplFixedArray */
 	private $blockStates;
 
@@ -273,6 +289,12 @@ class Level implements ChunkManager, Metadatable{
 	private $generator;
 	/** @var Generator */
 	private $generatorInstance;
+
+	/** @var Weather */
+	public $raining = false ;
+	public $rainTime = 0;
+	public $thundering = false;
+	public $thunderTime = 0;
 
 	/**
 	 * Returns the chunk unique hash/key
@@ -361,6 +383,9 @@ class Level implements ChunkManager, Metadatable{
 		$this->updateQueue->setExtractFlags(\SplPriorityQueue::EXTR_BOTH);
 		$this->time = (int) $this->provider->getTime();
 
+		$this->updateRedstoneQueue = new ReversePriorityQueue();
+		$this->updateRedstoneQueue->setExtractFlags(\SplPriorityQueue::EXTR_BOTH);
+		
 		$this->chunkTickRadius = min($this->server->getViewDistance(), max(1, (int) $this->server->getProperty("chunk-ticking.tick-radius", 4)));
 		$this->chunksPerTick = (int) $this->server->getProperty("chunk-ticking.per-tick", 40);
 		$this->chunkGenerationQueueSize = (int) $this->server->getProperty("chunk-generation.queue-size", 8);
@@ -372,6 +397,7 @@ class Level implements ChunkManager, Metadatable{
 		$this->timings = new LevelTimings($this);
 		$this->temporalPosition = new Position(0, 0, 0, $this);
 		$this->temporalVector = new Vector3(0, 0, 0);
+		$this->temporalVector2 = new Vector3(0, 0, 0);
 		$this->tickRate = 1;
 	}
 
@@ -688,6 +714,11 @@ class Level implements ChunkManager, Metadatable{
 			$this->sendTimeTicker = 0;
 		}
 
+		$this->rainTime--;
+		if($this->rainTime <= 0){
+			$this->setRaining(!$this->raining);
+		}
+
 		$this->unloadChunks();
 
 		//Do block updates
@@ -698,7 +729,19 @@ class Level implements ChunkManager, Metadatable{
 			$block->onUpdate(self::BLOCK_UPDATE_SCHEDULED);
 		}
 		$this->timings->doTickPending->stopTiming();
-
+		
+		//Do Redstone updates
+		$this->timings->doTickPending->startTiming();
+		while($this->updateRedstoneQueue->count() > 0 and $this->updateRedstoneQueue->current()["priority"] <= $currentTick){
+			$block = $this->getBlock($this->updateRedstoneQueue->extract()["data"]);
+			$hash = Level::blockHash($block->x, $block->y, $block->z);
+			$type = $this->updateRedstoneQueueIndex[$hash]['type'];
+			$power = $this->updateRedstoneQueueIndex[$hash]['power'];
+			unset($this->updateRedstoneQueueIndex[$hash]);
+			$block->onRedstoneUpdate($type,$power);
+		}
+		$this->timings->doTickPending->stopTiming();
+		
 		$this->timings->entityTick->startTiming();
 		//Update entities that need update
 		Timings::$tickEntityTimer->startTiming();
@@ -923,8 +966,6 @@ class Level implements ChunkManager, Metadatable{
 		foreach($this->chunkTickList as $index => $loaders){
 			Level::getXZ($index, $chunkX, $chunkZ);
 
-
-
 			if(!isset($this->chunks[$index]) or ($chunk = $this->getChunk($chunkX, $chunkZ, false)) === null){
 				unset($this->chunkTickList[$index]);
 				continue;
@@ -935,7 +976,6 @@ class Level implements ChunkManager, Metadatable{
 			foreach($chunk->getEntities() as $entity){
 				$entity->scheduleUpdate();
 			}
-
 
 			if($this->useSections){
 				foreach($chunk->getSections() as $section){
@@ -1038,19 +1078,10 @@ class Level implements ChunkManager, Metadatable{
 		$b5=$this->getBlock($this->temporalVector->setComponents($pos->x, $pos->y, $pos->z - 1));
 		$b6=$this->getBlock($this->temporalVector->setComponents($pos->x, $pos->y, $pos->z + 1));
 		
-		$startRedstoneUpdate = false;
-		if($currentBlock instanceof Redstone and $this->getServer()->isAllowRedstoneCalculation())
-			$startRedstoneUpdate = true;
-		
 		$this->server->getPluginManager()->callEvent($ev = new BlockUpdateEvent($b1));
 		if(!$ev->isCancelled()){
 			$fetchedblock=$ev->getBlock();
 			$fetchedblock->onUpdate(self::BLOCK_UPDATE_NORMAL);
-			if($startRedstoneUpdate){
-				if($currentBlock instanceof Redstone){
-					$fetchedblock->onRedstoneUpdate(self::BLOCK_UPDATE_NORMAL);
-				}
-			}
 		}
 
 		$this->server->getPluginManager()->callEvent($ev = new BlockUpdateEvent($b2));
@@ -1063,84 +1094,24 @@ class Level implements ChunkManager, Metadatable{
 		if(!$ev->isCancelled()){
 			$fetchedblock=$ev->getBlock();
 			$fetchedblock->onUpdate(self::BLOCK_UPDATE_NORMAL);
-			if($startRedstoneUpdate){
-				$fetchedblock->onRedstoneUpdate(self::BLOCK_UPDATE_NORMAL);
-				if(!$fetchedblock instanceof Transparent){
-					$fetchedblockUP = $fetchedblock->getSide(1);
-					if($fetchedblockUP instanceof Redstone)
-						$fetchedblockUP -> onRedstoneUpdate(self::BLOCK_UPDATE_NORMAL);
-				}
-				$fetchenblockID = $this->getBlockIdAt($b3->x, $b3->y, $b3->z);
-				if($fetchenblockID==0){
-					$fetchedblockDown = $fetchedblock->getSide(0);
-					if($fetchedblockDown instanceof Redstone or $fetchedblockDown instanceof RedstoneTools)
-						$fetchedblockDown -> onRedstoneUpdate(self::BLOCK_UPDATE_NORMAL);
-				}
-			}
 		}
 
 		$this->server->getPluginManager()->callEvent($ev = new BlockUpdateEvent($b4));
 		if(!$ev->isCancelled()){
 			$fetchedblock=$ev->getBlock();
 			$fetchedblock->onUpdate(self::BLOCK_UPDATE_NORMAL);
-			if($startRedstoneUpdate){
-				$fetchedblock->onRedstoneUpdate(self::BLOCK_UPDATE_NORMAL);
-				if(!$fetchedblock instanceof Transparent){
-					$fetchedblockUP = $fetchedblock->getSide(1);
-					if($fetchedblockUP instanceof Redstone)
-						$fetchedblockUP -> onRedstoneUpdate(self::BLOCK_UPDATE_NORMAL);
-				}
-				$fetchenblockID = $this->getBlockIdAt($b4->x, $b4->y, $b4->z);
-				if($fetchenblockID==0){
-					$fetchedblockDown = $fetchedblock->getSide(0);
-					if($fetchedblockDown instanceof Redstone or $fetchedblockDown instanceof RedstoneTools)
-						$fetchedblockDown -> onRedstoneUpdate(self::BLOCK_UPDATE_NORMAL);
-					}
-			}
 		}
 
 		$this->server->getPluginManager()->callEvent($ev = new BlockUpdateEvent($b5));
 		if(!$ev->isCancelled()){
 			$fetchedblock=$ev->getBlock();
 			$fetchedblock->onUpdate(self::BLOCK_UPDATE_NORMAL);
-
-			if($startRedstoneUpdate){
-				if($currentBlock instanceof Redstone){
-					$fetchedblock->onRedstoneUpdate(self::BLOCK_UPDATE_NORMAL);
-				}
-				$fetchedblock->onRedstoneUpdate(self::BLOCK_UPDATE_NORMAL);
-				if(!$fetchedblock instanceof Transparent){
-					$fetchedblockUP = $fetchedblock->getSide(1);
-					if($fetchedblockUP instanceof Redstone)
-						$fetchedblockUP -> onRedstoneUpdate(self::BLOCK_UPDATE_NORMAL);
-				}
-				$fetchedblockID = $this->getBlockIdAt($b2->x, $b2->y, $b2->z);
-				if($fetchedblockID==0){
-					$fetchedblockDown = $fetchedblock->getSide(0);
-					if($fetchedblockDown instanceof Redstone or $fetchedblockDown instanceof RedstoneTools)
-						$fetchedblockDown -> onRedstoneUpdate(self::BLOCK_UPDATE_NORMAL);
-				}
-			}
 		}
 
 		$this->server->getPluginManager()->callEvent($ev = new BlockUpdateEvent($b6));
 		if(!$ev->isCancelled()){
 			$fetchedblock=$ev->getBlock();
 			$fetchedblock->onUpdate(self::BLOCK_UPDATE_NORMAL);
-			if($startRedstoneUpdate){
-				$fetchedblock->onRedstoneUpdate(self::BLOCK_UPDATE_NORMAL);
-				if(!$fetchedblock instanceof Transparent){
-					$fetchedblockUP = $fetchedblock->getSide(1);
-					if($fetchedblockUP instanceof Redstone)
-						$fetchedblockUP -> onRedstoneUpdate(self::BLOCK_UPDATE_NORMAL);
-				}
-				$fetchenblockID = $this->getBlockIdAt($b2->x, $b2->y, $b2->z);
-				if($fetchenblockID==0){
-					$fetchedblockDown = $fetchedblock->getSide(0);
-					if($fetchedblockDown instanceof Redstone or $fetchedblockDown instanceof RedstoneTools)
-						$fetchedblockDown -> onRedstoneUpdate(self::BLOCK_UPDATE_NORMAL);
-					}
-			}
 		}
 	}
 
@@ -1155,7 +1126,23 @@ class Level implements ChunkManager, Metadatable{
 		$this->updateQueueIndex[$index] = $delay;
 		$this->updateQueue->insert(new Vector3((int) $pos->x, (int) $pos->y, (int) $pos->z), (int) $delay + $this->server->getTick());
 	}
-
+	
+	/**
+	 * @param Vector3 $pos
+	 * @param int     $delay
+	 */
+	public function setRedstoneUpdate(Vector3 $pos, $delay, $type , $power){
+		if(!$this->getServer()->isAllowRedstoneCalculation()){
+			return;
+		}
+		if(isset($this->updateRedstoneQueueIndex[$index = Level::blockHash($pos->x, $pos->y, $pos->z)]) and $this->updateRedstoneQueueIndex[$index]['delay'] <= $delay){
+			return;
+		}
+		$this->updateRedstoneQueueIndex[$index]['delay'] = $delay;
+		$this->updateRedstoneQueueIndex[$index]['type'] = $type;
+		$this->updateRedstoneQueueIndex[$index]['power'] = $power;
+		$this->updateRedstoneQueue->insert(new Vector3((int) $pos->x, (int) $pos->y, (int) $pos->z), (int) $delay + $this->server->getTick());
+	}
 	/**
 	 * @param AxisAlignedBB $bb
 	 * @param bool          $targetFirst
@@ -1535,11 +1522,6 @@ class Level implements ChunkManager, Metadatable{
 						$currentBlock = $this->getBlock($pos);						
 						$fetchedblock=$ev->getBlock();
 						$fetchedblock->onUpdate(self::BLOCK_UPDATE_NORMAL);
-						if($this->getServer()->isAllowRedstoneCalculation()){
-							if($currentBlock instanceof Redstone or $currentBlock instanceof RedstoneTools){
-								$fetchedblock->onRedstoneUpdate(self::BLOCK_UPDATE_NORMAL);
-							}
-						}
 				}
 
 				$this->updateAround($pos);
@@ -1609,7 +1591,12 @@ class Level implements ChunkManager, Metadatable{
 
 		if($player !== null){
 			$ev = new BlockBreakEvent($player, $target, $item, $player->isCreative() ? true : false);
-
+			
+			if($item instanceof Tool){
+				$item->setDamage($item->getDamage() + $item->getDamageStep($target));
+				$player->getInventory()->setItemInHand($item);
+			}
+			
 			if($player->isSurvival() and $item instanceof Item and !$target->isBreakable($item)){
 				$ev->setCancelled();
 			}elseif(!$player->isOp() and ($distance = $this->server->getSpawnRadius()) > -1){
@@ -3024,5 +3011,120 @@ class Level implements ChunkManager, Metadatable{
 			$this->moveToSend[$index] = [];
 		}
 		$this->moveToSend[$index][$entityId] = [$entityId, $x, $y, $z, $yaw, $headYaw === null ? $yaw : $headYaw, $pitch];
+	}
+
+	public function isRaining(){
+		return $this->raining;
+	}
+
+	public function setRaining($raining = false){
+		$weather = new WeatherChangeEvent($this, $raining);
+		$this->getServer()->getPluginManager()->callEvent($weather);
+
+		$this->raining = $raining;
+
+		$pk = new LevelEventPacket();
+
+		if($raining === true){
+			$pk->evid = LevelEventPacket::EVENT_START_RAIN;
+			$pk->data = mt_rand(90000,110000);
+			//$this->setRainTime = mt_rand(0,100);
+			//TODO RainTime
+		}else{
+			$pk->evid = LevelEventPacket::EVENT_STOP_RAIN;
+			//$this->setRainTime = mt_rand(0,100);
+		}
+
+        Server::broadcastPacket($this->getPlayers(), $pk);
+	}
+
+	public function getRainTime(){
+		return $this->rainTime;
+	}
+
+	public  function setRainTime($rainTime){
+		$this->rainTime = $rainTime;
+	}
+
+	public function addLighting($x, $y, $z, $p){
+		$pk = new AddEntityPacket();
+		$pk->type = 93;
+		$pk->eid = 93;
+		$pk->x = $x;
+		$pk->y = $y;
+		$pk->z = $z;
+		$pk->metadata = array(3,3,3,3);
+		$p->dataPacket($pk);
+	}
+
+	public function setThundering($thundering = false){
+		if($thundering && !$this->isRaining()){
+			$this->setRaining(true);
+		}
+
+		$thunder = new ThunderChangeEvent($this, $thundering);
+		$this->getServer()->getPluginManager()->callEvent($thunder);
+
+		$this->thundering = $thundering;
+
+		$pk = new LevelEventPacket();
+
+		if($thundering === true){
+			$pk->evid = LevelEventPacket::EVENT_START_THUNDER;
+			$pk->data = mt_rand(90000,110000);
+			foreach($this->getPlayers() as $p){
+				$x = $p->getX() + rand(-100,100);
+				$y = $p->getY() + rand(20,50);
+				$z = $p->getZ() + rand(-100,100);
+
+				$this->addLighting($x, $y, $z, $p);
+			}
+		}else{
+			$pk->evid = LevelEventPacket::EVENT_STOP_THUNDER;
+			//$this->setThunderTime = mt_rand(0,100);
+			//TODO ThunderTime
+		}
+
+        Server::broadcastPacket($this->getPlayers(), $pk);
+
+	}
+
+	public function isThundering(){
+		return (bool) ($this->isRaining() && $this->thundering);
+	}
+
+	public function getThunderTime(){
+		return $this->thunderTime;
+	}
+
+	public function setThunderTime($thunderTime){
+		$this->thunderTime = $thunderTime;
+	}
+
+	public function sendWeather(Player $player){
+		if($player === null){
+			$this->sendWeather($player);
+		}
+
+		$pk = new LevelEventPacket();
+
+		if($this->isRaining() === true){
+			$pk->evid = LevelEventPacket::EVENT_START_RAIN;
+			$pk->data = mt_rand(90000,110000);
+		}else{
+			$pk->evid = LevelEventPacket::EVENT_STOP_RAIN;
+		}
+
+		Server::broadcastPacket($this->getPlayers(), $pk);
+
+		if($this->isThundering() === true){
+			$pk->evid = LevelEventPacket::EVENT_START_THUNDER;
+			$pk->data = mt_rand(90000,110000);
+
+		}else{
+			$pk->evid = LevelEventPacket::EVENT_STOP_THUNDER;
+		}
+
+		Server::broadcastPacket($this->getPlayers(), $pk);
 	}
 }

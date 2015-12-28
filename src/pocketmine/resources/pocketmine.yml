@@ -1,4 +1,4 @@
-# Main configuration file for PocketMine-MP
+# Main configuration file for ImagicalMine
 # These settings are the ones that cannot be included in server.properties
 # Some of these settings are safe, others can break your server if modified incorrectly
 # New settings/defaults won't appear automatically on this file when upgrading.
@@ -9,7 +9,7 @@ settings:
  language: "eng"
  #Whether to send all strings translated to server locale or let the device handle them
  force-language: false
- shutdown-message: "Server closed"
+ shutdown-message: "Server closed. Thanks for playing on an ImagicalMine server!"
  #Allow listing plugins via Query
  query-plugins: true
  #Show a console message when a plugin uses deprecated API methods
@@ -152,17 +152,6 @@ anonymous-statistics:
  #Sends anonymous statistics for data aggregation, plugin usage tracking
  enabled: true
  host: stats.pocketmine.net
-
-auto-updater:
- enabled: true
- on-update:
-  warn-console: true
-  warn-ops: true
- #Can be development, beta or stable.
- preferred-channel: stable
- #If using a development version, it will suggest changing the channel
- suggest-channels: true
- host: www.pocketmine.net
 
 aliases:
  #Examples:

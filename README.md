@@ -7,11 +7,11 @@
 
 ## Quick Notes
 
-This is a third-party build of PocketMine. ImagicalMine is in no way affiliated with PocketMine-MP.
-Please do not use the issue tracker as a chat room. If you want to chat and ask questions, contact @ImagicalTeam on Twitter or join our Gitter Chat.
+- This is a third-party build of PocketMine. ImagicalMine is in no way affiliated with PocketMine-MP.
+- Please do not use the issue tracker as a chat room. If you want to chat and ask questions, contact @ImagicalTeam on Twitter or join our Gitter Chat.
 
 ## Can I test ImagicalMine before I download and use it?
-Sure, why not? Simply join one of the two servers below to see what ImagicalMine can do! You'll be amazed!<br>
+Sure, why not? Simply join one of the servers below to see what ImagicalMine can do! You'll be amazed!<br>
 **RumBenCraft**<br>
 IP: **play.rumbencraft.net**    
 Port: **19132**
@@ -27,6 +27,15 @@ Port: **19133**
 **PigCraftPE**<br>
 IP: **pigcraftpe.mcpe.me**    
 Port: **19192**
+
+### Can I see some custom-made versions that are based off ImagicalMine?
+Possibly. Uh... I meant yes, check out these servers:
+
+**LegoCraftPE**<br>
+IP: **play.legocraft.me**<br>
+Port: **19132**<br>
+
+Never underestimate what you can do with ImagicalMine!<br>
 
 ## What is this?
 
@@ -51,6 +60,16 @@ Of course you can! Check out the [ImagicalMine forums](http://forums.imagicalcor
 ## How do I install ImagicalMine?
 
 Read the documentation for installing ImagicalMine [here](http://imagicalmine.readthedocs.org/en/latest/installation.html).
+You can also go to the Jenkins server by clicking the picture below.<br>
+ <a href="http://jenkins.imagicalcorp.ml:8080/job/ImagicalMine/">![Unofficial-Downloadpng](http://s4.postimg.org/8u7blm3r1/imagical.png)</a>
+
+## I'm on a MCPE server hosting provider. How can I install ImagicalMine from there?
+
+Some MCPE server hosting providers support ImagicalMine as a version for their customers to download. The following list shows all of the providers who support ImagicalMine as a version to download for use on their servers:
+* __[HostMyServers](http://hostmyservers.com)__
+* __[HostingItAll](http://hostingitall.com)__
+
+**If you are a MCPE server hosting provider and you support ImagicalMine as a version available for download and to use as part of your service, contact us and we'll happily add your business to the list.**
 
 ## What third-party libraries or protocols did ImagicalMine use?
 
@@ -68,9 +87,9 @@ Here's the complete list:
 
 ## Quick Links
 
-* __[Homepage](http://imagicalmine.imagicalcorp.ml)__
-* __[Forums](http://forums.imagicalcorp.ml)__
+* __[Homepage](http://imagicalmine.me)__
+* __[Forums](http://forums.imagicalmine.me)__
 * __[Documentation](http://imagicalmine.readthedocs.org)__
-* __[Plugin Repository](http://forums.imagicalcorp.ml/resources)__
-* __[Official Jenkins Server](http://jenkins.imagicalcorp.ml:8080)__
+* __[Plugin Repository](http://forums.imagicalmine.me/resources)__
+* __[Official Jenkins Server](http://jenkins.imagicalmine.me:8080)__
 * __[Official Twitter Account](https://twitter.com/ImagicalCorp)__
