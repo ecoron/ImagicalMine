@@ -90,7 +90,7 @@ class Installer{
   (at your option) any later version.
 
 LICENSE;
-		echo "\n[?] " . $this->lang->accept_license . " (y/N): ";
+		echo "\n[?] " . $this->lang->accept_license . " (Y/n): ";
 		if(strtolower($this->getInput("n")) != "y"){
 			echo "[!] " . $this->lang->you_have_to_accept_the_license . "\n";
 			sleep(5);
@@ -129,7 +129,13 @@ LICENSE;
 			echo "[?] " . $this->lang->default_gamemode . ": (" . self::DEFAULT_GAMEMODE . "): ";
 			$gamemode = (int) $this->getInput(self::DEFAULT_GAMEMODE);
 		}while($gamemode < 0 or $gamemode > 3);
-		$config->set("gamemode", $gamemode);
+		echo "[*] " . $this->lang->disable_logfile_info . "\n";
+		echo "[?] " . $this->lang->disable_logfile . " (Y/n): ";
+		if(strtolower($this->getInput("y")) == "n"){
+			$config->set("disable-logfile", 1);
+		}else{
+			$config->set("disable-logfile", 0);
+		}
 		echo "[?] " . $this->lang->max_players . " (" . self::DEFAULT_PLAYERS . "): ";
 		$config->set("max-players", (int) $this->getInput(self::DEFAULT_PLAYERS));
 		echo "[*] " . $this->lang->spawn_protection_info . "\n";

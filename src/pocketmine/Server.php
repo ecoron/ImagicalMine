@@ -2,17 +2,17 @@
 
 /*
  *
- *  _                       _           _ __  __ _             
- * (_)                     (_)         | |  \/  (_)            
- *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  
- * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ 
- * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ 
- * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| 
- *                     __/ |                                   
- *                    |___/                                                                     
- * 
+ *  _                       _           _ __  __ _
+ * (_)                     (_)         | |  \/  (_)
+ *  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___
+ * | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \
+ * | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/
+ * |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___|
+ *                     __/ |
+ *                    |___/
+ *
  * This program is a third party build by ImagicalMine.
- * 
+ *
  * ImagicalMine is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -20,7 +20,7 @@
  *
  * @author ImagicalMine Team
  * @link http://forums.imagicalcorp.ml/
- * 
+ *
  *
 */
 
@@ -42,15 +42,19 @@ use pocketmine\entity\Bat;
 use pocketmine\entity\Blaze;
 use pocketmine\entity\Boat;
 use pocketmine\entity\CavernSpider;
+use pocketmine\entity\ChargedCreeper;
 use pocketmine\entity\Chicken;
+use pocketmine\entity\Cow;
 use pocketmine\entity\Creeper;
 use pocketmine\entity\Effect;
+use pocketmine\entity\Egg;
 use pocketmine\entity\Enderman;
 use pocketmine\entity\Entity;
 use pocketmine\entity\ExperienceOrb;
 use pocketmine\entity\FallingSand;
 use pocketmine\entity\Ghast;
 use pocketmine\entity\Human;
+use pocketmine\entity\IronGolem;
 use pocketmine\entity\Item as DroppedItem;
 use pocketmine\entity\MagmaCube;
 use pocketmine\entity\Minecart;
@@ -59,18 +63,22 @@ use pocketmine\entity\Ozelot;
 use pocketmine\entity\Pig;
 use pocketmine\entity\PigZombie;
 use pocketmine\entity\PrimedTNT;
+use pocketmine\entity\Rabbit;
 use pocketmine\entity\Sheep;
 use pocketmine\entity\Silverfish;
 use pocketmine\entity\Skeleton;
 use pocketmine\entity\Slime;
 use pocketmine\entity\Snowball;
+use pocketmine\entity\SnowGolem;
 use pocketmine\entity\Spider;
 use pocketmine\entity\Squid;
 use pocketmine\entity\ThrownExpBottle;
 use pocketmine\entity\ThrownPotion;
 use pocketmine\entity\Villager;
+use pocketmine\entity\WitherSkeleton;
 use pocketmine\entity\Wolf;
 use pocketmine\entity\Zombie;
+use pocketmine\entity\ZombieVillager;
 use pocketmine\event\HandlerList;
 use pocketmine\event\level\LevelInitEvent;
 use pocketmine\event\level\LevelLoadEvent;
@@ -153,6 +161,7 @@ use pocketmine\utils\TextWrapper;
 use pocketmine\utils\Utils;
 use pocketmine\utils\UUID;
 use pocketmine\utils\VersionString;
+use pocketmine\entity\FishingHook;
 
 /**
  * The class that manages everything
@@ -560,14 +569,14 @@ class Server{
 	public function getAllowFlight(){
 		return $this->getConfigBoolean("allow-flight", false);
 	}
-	
+
 	/**
 	 * @return bool
 	 */
 	public function isAllowRedstoneCalculation(){
 		return $this->getConfigBoolean("redstone-calculation", true);
 	}
-	
+
 	/**
 	 * @return bool
 	 */
@@ -892,7 +901,7 @@ class Server{
 	/**
 	 * @param string   $name
 	 * @param Compound $nbtTag
-	 * @param bool $async
+	 * @param bool     $async
 	 */
 	public function saveOfflinePlayerData($name, Compound $nbtTag, $async = false){
 		$nbt = new NBT(NBT::BIG_ENDIAN);
@@ -1192,8 +1201,8 @@ class Server{
 
 		$order = [];
 
-		for($X = -3; $X <= 3; ++$X){
-			for($Z = -3; $Z <= 3; ++$Z){
+		for($X = -3;$X <= 3;++$X){
+			for($Z = -3;$Z <= 3;++$Z){
 				$distance = $X ** 2 + $Z ** 2;
 				$chunkX = $X + $centerX;
 				$chunkZ = $Z + $centerZ;
@@ -1504,18 +1513,18 @@ class Server{
 		$this->console = new CommandReader();
 
 		$version = new VersionString($this->getPocketMineVersion());
-                
-                echo("  _                       _           _ __  __ _             \n");
-                echo(" (_)                     (_)         | |  \/  (_)            \n");
-                echo("  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  \n");
-                echo(" | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ \n");
-                echo(" | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ \n");
-                echo(" |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| \n");
-                echo("                     __/ |                                   \n");
-                echo("                    |___/                                    \n");
-                echo("                                                             \n");                           
 
-		$this->logger->info("Loading imagicalmine.yml...");
+		echo("  _                       _           _ __  __ _             \n");
+		echo(" (_)                     (_)         | |  \/  (_)            \n");
+		echo("  _ _ __ ___   __ _  __ _ _  ___ __ _| | \  / |_ _ __   ___  \n");
+		echo(" | | '_ ` _ \ / _` |/ _` | |/ __/ _` | | |\/| | | '_ \ / _ \ \n");
+		echo(" | | | | | | | (_| | (_| | | (_| (_| | | |  | | | | | |  __/ \n");
+		echo(" |_|_| |_| |_|\__,_|\__, |_|\___\__,_|_|_|  |_|_|_| |_|\___| \n");
+		echo("                     __/ |                                   \n");
+		echo("                    |___/                                    \n");
+		echo("                                                             \n");
+
+		$this->logger->info("Loading pocketmine.yml...");
 		if(!file_exists($this->dataPath . "pocketmine.yml")){
 			$content = file_get_contents($this->filePath . "src/pocketmine/resources/pocketmine.yml");
 			if($version->isDev()){
@@ -1550,6 +1559,7 @@ class Server{
 			"enable-rcon" => false,
 			"rcon.password" => substr(base64_encode(@Utils::getRandomBytes(20, false)), 3, 10),
 			"auto-save" => true,
+			"disable-logfile" => false,
 		]);
 
 		$this->forceLanguage = $this->getProperty("settings.force-language", false);
@@ -1640,8 +1650,13 @@ class Server{
 			$this->getApiVersion()
 		]));
 		$this->logger->info($this->getLanguage()->translateString("pocketmine.server.license", [$this->getName()]));
-                $this->logger->info("Welcome to ImagicalMine - Server software for Minecraft : Pocket Edition.");
+		$this->logger->info("Welcome to ImagicalMine - Server software for Minecraft : Pocket Edition.");
 		$this->logger->info("If you find any bugs, please report them at https://github.com/ImagicalCorp/ImagicalMine/issues");
+		$this->logger->info("The original code in ImagicalMine is from PocketMine-MP. All original code structure and base was written by the PocketMine Team.");
+		$this->logger->info("Some of the code in ImagicalMine is taken from the Hydreon Corporation's projects. Code taken from Katana was for the original hunger core of ImagicalMine(now being rewritten). Code taken from Steadfast2 was used for an experimental skin fix during the MCPE 0.13.0 update.");
+		$this->logger->info("Some of the code in ImagicalMine is taken from the @hmy2001's project. Code taken from PocketMine-0.13.x was used for an experimental skin fix during the MCPE 0.13.0 update.");
+		$this->logger->info("Some of the code in ImagicalMine is taken from the iTXTech's project. Code taken from Genisys was used for a variety of bug fixes and patches and new feature updates.");
+		$this->logger->info("Thank you for using ImagicalMine. The Imagical Corporation and the ImagicalMine Team will be sure to add new features and continuously fix and patch bugs.");
 		Timings::init();
 
 		$this->consoleSender = new ConsoleCommandSender();
@@ -1865,7 +1880,7 @@ class Server{
 	 *
 	 * @param Player[]            $players
 	 * @param DataPacket[]|string $packets
-	 * @param bool                 $forceSync
+	 * @param bool                $forceSync
 	 * @param int                 $channel
 	 */
 	public function batchPackets(array $players, array $packets, $forceSync = false, $channel = 0){
@@ -2296,12 +2311,9 @@ class Server{
 	public function removeOnlinePlayer(Player $player){
 		if(isset($this->playerList[$player->getRawUniqueId()])){
 			unset($this->playerList[$player->getRawUniqueId()]);
-
 			$pk = new PlayerListPacket();
 			$pk->type = PlayerListPacket::TYPE_REMOVE;
-			$entry = new PlayerListEntry;
-			$entry->uuid = $player->getUniqueId();
-			$pk->entries[] = $entry;
+			$pk->entries[] = [$player->getUniqueId()];
 			Server::broadcastPacket($this->playerList, $pk);
 		}
 	}
@@ -2309,23 +2321,14 @@ class Server{
 	public function updatePlayerListData(UUID $uuid, $entityId, $name, $skinName, $skinData, array $players = null, $skinTransparency = false){
 		$pk = new PlayerListPacket();
 		$pk->type = PlayerListPacket::TYPE_ADD;
-		$entry = new PlayerListEntry;
-		$entry->uuid = $uuid;
-		$entry->entityId = $entityId;
-		$entry->name = $name;
-		$entry->skinName = $skinName;
-		$entry->skinData = $skinData;
-		$entry->transparency = $skinTransparency;
-		$pk->entries[] = $entry;
+		$pk->entries[] = [$uuid, $entityId, $name, $skinName, $skinData, $skinTransparency];
 		Server::broadcastPacket($players === null ? $this->playerList : $players, $pk);
 	}
 
 	public function removePlayerListData(UUID $uuid, array $players = null){
 		$pk = new PlayerListPacket();
 		$pk->type = PlayerListPacket::TYPE_REMOVE;
-		$entry = new PlayerListEntry;
-		$entry->uuid = $uuid;
-		$pk->entries[] = $entry;
+		$pk->entries[] = [$uuid];
 		Server::broadcastPacket($players === null ? $this->playerList : $players, $pk);
 	}
 
@@ -2333,14 +2336,7 @@ class Server{
 		$pk = new PlayerListPacket();
 		$pk->type = PlayerListPacket::TYPE_ADD;
 		foreach($this->playerList as $player){
-			$entry = new PlayerListEntry;
-			$entry->uuid = $player->getUniqueId();
-			$entry->entityId = $player->getId();
-			$entry->name = $player->getDisplayName();
-			$entry->skinName = $player->getSkinName();
-			$entry->skinData = $player->getSkinData();
-			$entry->transparency = $player->isSkinTransparent();
-			$pk->entries[] = $entry;
+			$pk->entries[] = [$player->getUniqueId(), $player->getId(), $player->getDisplayName(), $player->getSkinName(), $player->getSkinData(), $player->isSkinTransparent()];
 		}
 
 		$p->dataPacket($pk);
@@ -2391,14 +2387,14 @@ class Server{
 						if($r > $this->baseTickRate){
 							$level->tickRateCounter = $level->getTickRate();
 						}
-						$this->getLogger()->debug("Raising level \"".$level->getName()."\" tick rate to ".$level->getTickRate()." ticks");
+						$this->getLogger()->debug("Raising level \"" . $level->getName() . "\" tick rate to " . $level->getTickRate() . " ticks");
 					}elseif($tickMs >= 50){
 						if($level->getTickRate() === $this->baseTickRate){
 							$level->setTickRate(max($this->baseTickRate + 1, min($this->autoTickRateLimit, floor($tickMs / 50))));
-							$this->getLogger()->debug("Level \"".$level->getName()."\" took ".round($tickMs, 2)."ms, setting tick rate to ".$level->getTickRate()." ticks");
+							$this->getLogger()->debug("Level \"" . $level->getName() . "\" took " . round($tickMs, 2) . "ms, setting tick rate to " . $level->getTickRate() . " ticks");
 						}elseif(($tickMs / $level->getTickRate()) >= 50 and $level->getTickRate() < $this->autoTickRateLimit){
 							$level->setTickRate($level->getTickRate() + 1);
-							$this->getLogger()->debug("Level \"".$level->getName()."\" took ".round($tickMs, 2)."ms, setting tick rate to ".$level->getTickRate()." ticks");
+							$this->getLogger()->debug("Level \"" . $level->getName() . "\" took " . round($tickMs, 2) . "ms, setting tick rate to " . $level->getTickRate() . " ticks");
 						}
 						$level->tickRateCounter = $level->getTickRate();
 					}
@@ -2472,7 +2468,7 @@ class Server{
 		$d = Utils::getRealMemoryUsage();
 
 		$u = Utils::getMemoryUsage(true);
-		$usage = round(($u[0] / 1024) / 1024, 2) . "/" . round(($d[0] / 1024) / 1024, 2) . "/" . round(($u[1] / 1024) / 1024, 2) . "/".round(($u[2] / 1024) / 1024, 2)." MB @ " . Utils::getThreadCount() . " threads";
+		$usage = round(($u[0] / 1024) / 1024, 2) . "/" . round(($d[0] / 1024) / 1024, 2) . "/" . round(($u[1] / 1024) / 1024, 2) . "/" . round(($u[2] / 1024) / 1024, 2) . " MB @ " . Utils::getThreadCount() . " threads";
 
 		echo "\x1b]0;" . $this->getName() . " " .
 			$this->getPocketMineVersion() .
@@ -2628,13 +2624,18 @@ class Server{
 		Entity::registerEntity(Blaze::class);
 		Entity::registerEntity(Boat::class);
 		Entity::registerEntity(CavernSpider::class);
+		Entity::registerEntity(ChargedCreeper::class);
 		Entity::registerEntity(Chicken::class);
+		Entity::registerEntity(Cow::class);
 		Entity::registerEntity(Creeper::class);
 		Entity::registerEntity(DroppedItem::class);
+		Entity::registerEntity(Egg::class);
 		Entity::registerEntity(Enderman::class);
 		Entity::registerEntity(ExperienceOrb::class);
 		Entity::registerEntity(FallingSand::class);
+		Entity::registerEntity(FishingHook::class);
 		Entity::registerEntity(Ghast::class);
+		Entity::registerEntity(IronGolem::class);
 		Entity::registerEntity(MagmaCube::class);
 		Entity::registerEntity(Minecart::class);
 		Entity::registerEntity(Mooshroom::class);
@@ -2642,18 +2643,22 @@ class Server{
 		Entity::registerEntity(Pig::class);
 		Entity::registerEntity(PigZombie::class);
 		Entity::registerEntity(PrimedTNT::class);
+		Entity::registerEntity(Rabbit::class);
 		Entity::registerEntity(Sheep::class);
 		Entity::registerEntity(Silverfish::class);
 		Entity::registerEntity(Skeleton::class);
 		Entity::registerEntity(Slime::class);
 		Entity::registerEntity(Snowball::class);
+		Entity::registerEntity(SnowGolem::class);
 		Entity::registerEntity(Spider::class);
 		Entity::registerEntity(Squid::class);
 		Entity::registerEntity(ThrownExpBottle::class);
 		Entity::registerEntity(ThrownPotion::class);
 		Entity::registerEntity(Villager::class);
+		Entity::registerEntity(WitherSkeleton::class);
 		Entity::registerEntity(Wolf::class);
 		Entity::registerEntity(Zombie::class);
+		Entity::registerEntity(ZombieVillager::class);
 		Entity::registerEntity(Human::class, true);
 	}
 
