@@ -35,6 +35,7 @@ class MainLogger extends \AttachableThreadedLogger{
 	protected $logStream;
 	protected $shutdown;
 	protected $logDebug;
+	protected $logEnabled = true;
 	private $logResource;
 	/** @var MainLogger */
 	public static $logger = null;
@@ -53,6 +54,7 @@ class MainLogger extends \AttachableThreadedLogger{
 		touch($logFile);
 		$this->logFile = $logFile;
 		$this->logDebug = (bool) $logDebug;
+		// $this->logEnabled = (bool) false;
 		$this->logStream = \ThreadedFactory::create();
 		$this->start();
 	}
@@ -214,32 +216,67 @@ class MainLogger extends \AttachableThreadedLogger{
 			});
 		}
 	}
+	
+	/**
+	 * 
+	 * @param boolean $state
+	 */
+	public function setLoggerState($state){
+		$this->logEnabled = $state;
+	}
 
 	public function run(){
 		$this->shutdown = false;
-		$this->logResource = fopen($this->logFile, "a+b");
-		if(!is_resource($this->logResource)){
-			throw new \RuntimeException("Couldn't open log file");
-		}
-
-		while($this->shutdown === false){
-			$this->synchronized(function(){
+		if($this->logEnabled){// need to be extended. Totally disabled log file now
+			$this->logResource = fopen($this->logFile, "a+b");
+			if(!is_resource($this->logResource)){
+				throw new \RuntimeException("Couldn't open log file");
+			}
+			
+			while($this->shutdown === false){
+				$this->synchronized(function (){
+					while($this->logStream->count() > 0){
+						$chunk = $this->logStream->shift();
+						fwrite($this->logResource, $chunk);
+					}
+					
+					$this->wait(25000);
+				});
+			}
+			
+			if($this->logStream->count() > 0){
 				while($this->logStream->count() > 0){
 					$chunk = $this->logStream->shift();
 					fwrite($this->logResource, $chunk);
 				}
-
-				$this->wait(25000);
-			});
+			}
+			
+			fclose($this->logResource);
 		}
+	}/*
 
-		if($this->logStream->count() > 0){
-			while($this->logStream->count() > 0){
-				$chunk = $this->logStream->shift();
-				fwrite($this->logResource, $chunk);
+	public function run(){
+		$this->shutdown = false;
+		if($this->logEnabled){
+			
+			while($this->shutdown === false){
+				$this->synchronized(function (){
+					while($this->logStream->count() > 0){
+						$chunk = $this->logStream->shift();
+						fwrite($this->logResource, $chunk);
+						$this->logResource = file_put_contents($this->logFile, $chunk, FILE_APPEND);
+					}
+					
+					$this->wait(25000);
+				});
+			}
+			
+			if($this->logStream->count() > 0){
+				while($this->logStream->count() > 0){
+					$chunk = $this->logStream->shift();
+					$this->logResource = file_put_contents($this->logFile, $chunk, FILE_APPEND);
+				}
 			}
 		}
-
-		fclose($this->logResource);
-	}
+	}*/
 }

@@ -31,7 +31,7 @@ use pocketmine\item\Tool;
 use pocketmine\level\Level;
 use pocketmine\Player;
 
-class RedstoneBlock extends Solid implements Redstone{
+class RedstoneBlock extends Solid implements Redstone,RedstoneSource{
 
 	protected $id = self::REDSTONE_BLOCK;
 
@@ -44,7 +44,7 @@ class RedstoneBlock extends Solid implements Redstone{
 	}
 	
 	public function getPower(){
-		return 15;
+		return 16;
 	}
 	
 	public function BroadcastRedstoneUpdate($type,$power){
@@ -56,15 +56,16 @@ class RedstoneBlock extends Solid implements Redstone{
 	
 	public function onRedstoneUpdate($type,$power){
 		if($type == Level::REDSTONE_UPDATE_PLACE or $type == Level::REDSTONE_UPDATE_LOSTPOWER){
-			$this->BroadcastRedstoneUpdate(Level::REDSTONE_UPDATE_NORMAL,$this->getPower());
+			$this->BroadcastRedstoneUpdate(Level::REDSTONE_UPDATE_PLACE,$this->getPower());
 			return;
 		}
 		return;
 	}
 	
 	public function place(Item $item, Block $block, Block $target, $face, $fx, $fy, $fz, Player $player = null){
-		$this->BroadcastRedstoneUpdate(Level::REDSTONE_UPDATE_PLACE,$this->getPower(),$this);
-		return $this->getLevel()->setBlock($this, $this, true, true);
+		$o = $this->getLevel()->setBlock($this, $this, true, true);
+		$this->BroadcastRedstoneUpdate(Level::REDSTONE_UPDATE_PLACE,$this->getPower());
+		return $o;
 	}
 	
 	public function getToolType(){

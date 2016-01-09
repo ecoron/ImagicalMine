@@ -29,6 +29,7 @@ namespace pocketmine\block;
 use pocketmine\item\Item;
 use pocketmine\level\Level;
 use pocketmine\level\sound\ButtonClickSound;
+use pocketmine\level\sound\ButtonReturnSound;
 use pocketmine\Player;
 
 class WoodenButton extends Flowable implements Redstone,RedstoneSwitch{
@@ -43,7 +44,7 @@ class WoodenButton extends Flowable implements Redstone,RedstoneSwitch{
 		if($this->meta < 7){
 			return 0;
 		}
-		return 15;
+		return 16;
 	}
 	
 	public function canBeActivated(){
@@ -84,7 +85,7 @@ class WoodenButton extends Flowable implements Redstone,RedstoneSwitch{
 	public function onUpdate($type){
 		if($type === Level::BLOCK_UPDATE_SCHEDULED){
 			$this->togglePowered();
-			$this->BroadcastRedstoneUpdate(Level::REDSTONE_UPDATE_BREAK,15);
+			$this->BroadcastRedstoneUpdate(Level::REDSTONE_UPDATE_BREAK,16);
 			return;
 		}
 		return;
@@ -107,7 +108,7 @@ class WoodenButton extends Flowable implements Redstone,RedstoneSwitch{
 		}
 		if(($player instanceof Player && !$player->isSneaking())||$player===null){
 			$this->togglePowered();
-			$this->BroadcastRedstoneUpdate(Level::REDSTONE_UPDATE_NORMAL,$this->getPower());
+			$this->BroadcastRedstoneUpdate(Level::REDSTONE_UPDATE_PLACE,$this->getPower());
 			$this->getLevel()->scheduleUpdate($this, 15);
 		}
 	}
@@ -131,9 +132,9 @@ class WoodenButton extends Flowable implements Redstone,RedstoneSwitch{
 		$this->meta ^= 0x08;
 		if($this->isPowered()){
 			$this->getLevel()->addSound(new ButtonClickSound($this));
-		}
-		else{
-			$this->getLevel()->addSound(new ButtonClickSound($this));
+
+		}else{
+			$this->getLevel()->addSound(new ButtonReturnSound($this, 1000));
 		}
 		$this->getLevel()->setBlock($this, $this);
 	}
