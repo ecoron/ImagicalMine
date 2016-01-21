@@ -163,7 +163,7 @@ aliases:
 
 log:
  # Whether to save server log information to disk (console.log).
- enable: true
+ enable: false
 
 hunger:
  # Toggling switch to enable or disable hunger.

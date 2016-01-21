@@ -170,7 +170,7 @@ use pocketmine\entity\FishingHook;
 class Server{
 	const BROADCAST_CHANNEL_ADMINISTRATIVE = "pocketmine.broadcast.admin";
 	const BROADCAST_CHANNEL_USERS = "pocketmine.broadcast.user";
-	
+
 	const PLAYER_MSG_TYPE_MESSAGE = 0;
 	const PLAYER_MSG_TYPE_TIP = 1;
 	const PLAYER_MSG_TYPE_POPUP = 2;
@@ -261,9 +261,9 @@ class Server{
 
 	/** @var Network */
 	private $network;
-	
-	/** @var Katana */ 
-	private $katana; 
+
+	/** @var Katana */
+	private $katana;
 
 	private $networkCompressionAsync = true;
 	public $networkCompressionLevel = 7;
@@ -353,13 +353,13 @@ class Server{
 	public $playerMsgType = self::PLAYER_MSG_TYPE_MESSAGE;
 	public $playerLoginMsg = "";
 	public $playerLogoutMsg = "";
-	
+
 	/**
 	 * @return mc3coreLib
 	 */
-	public function getKatana() { 
- 	return $this->katana; 
- 	} 
+	public function getKatana() {
+ 		return $this->katana;
+ 	}
 
 	/**
 	 * @return string
@@ -1532,7 +1532,7 @@ class Server{
 	public static function getInstance(){
 		return self::$instance;
 	}
-	
+
 	public function getExpectedExperience($level){
 		if(isset($this->expCache[$level])) return $this->expCache[$level];
 		$levelSquared = $level ** 2;
@@ -1614,7 +1614,7 @@ class Server{
 			"disable-logfile" => false,
 		]);
 
-		if(!$this->getProperty("log.enable", true)){
+		if($this->getProperty("log.enable", true)){
  			$this->logger->info("Enabled log writing to server.log");
  			$this->logger->Enable();
  		}else{
