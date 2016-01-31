@@ -1736,13 +1736,12 @@ abstract class Entity extends Location implements Metadatable{
 	 *     //do something
 	 * }
 	 *
-	 * @param Entity $entity
 	 * @param Player $player
 	 * @param int    $playerAction - defined in PlayerActionPacket
 	 *
 	 * @return bool
 	 */
-	public function onPlayerAction(Entity $entity,Player $player, $playerAction) {
+	public function onPlayerAction(Player $player, $playerAction) {
 		//override in specific item class
 		//if ($playerAction == PlayerActionPacket::ACTION_JUMP) {
 		//do something

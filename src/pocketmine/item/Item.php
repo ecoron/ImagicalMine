@@ -1791,13 +1791,12 @@ class Item{
 	 *     //do something
 	 * }
 	 *
-	 * @param Item   $item
 	 * @param Player $player
 	 * @param int	$playerAction - defined in PlayerActionPacket
 	 *
 	 * @return bool
 	 */
-	public function onPlayerAction(Item $item,Player $player, $playerAction) {
+	public function onPlayerAction(Player $player, $playerAction) {
 		//override in specific item class
 		//if ($playerAction == PlayerActionPacket::ACTION_JUMP) {
 			//do something

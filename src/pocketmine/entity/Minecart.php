@@ -30,9 +30,15 @@ use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\network\protocol\EntityEventPacket;
 use pocketmine\item\Item as ItemItem;
 
+/**
+ * @todo: link/unlink depending on player action (maybe jump is nice)
+ * PlayerActionPacket::ACTION_JUMP
+ *
+ */
+
 class Minecart extends Vehicle{
 
-     const NETWORK_ID = 84;
+    const NETWORK_ID = 84;
 
     public $height = 0.9;
     public $width = 1.1;
@@ -64,8 +70,13 @@ class Minecart extends Vehicle{
 
         $this->timings->startTiming();
 
-        $hasUpdate = false;;
-        //parent::onUpdate($currentTick);
+        $hasUpdate = false;
+
+        //workaround to give it a short livetime, sould removed until it's breakable
+        if($this->age > 1200){
+            $this->kill();
+            $hasUpdate = true;
+        }
 
         if($this->isAlive()){
             $this->motionY -= $this->gravity;
@@ -96,6 +107,8 @@ class Minecart extends Vehicle{
                 $this->motionZ = 0;
                 $this->isFreeMoving = false;
             }
+        }else{
+            parent::onUpdate($currentTick);
         }
 
         $this->timings->stopTiming();
@@ -143,11 +156,20 @@ class Minecart extends Vehicle{
     }
 
     public function getDrops(){
-        return [ItemItem::get(ItemItem::MINECART, 0, 1)];
+        // return [ItemItem::get(ItemItem::MINECART, 0, 1)];
+        return [];
     }
 
     public function getSaveId(){
         $class = new \ReflectionClass(static::class);
         return $class->getShortName();
+    }
+
+    public function onPlayerAction(Player $player, $playerAction) {
+        //override in specific item class
+        //if ($playerAction == PlayerActionPacket::ACTION_JUMP) {
+        //do something
+        //}
+        return true;
     }
 }
