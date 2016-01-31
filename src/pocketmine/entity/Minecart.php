@@ -180,10 +180,14 @@ class Minecart extends Vehicle{
         } else {
             //playerMove
             $this->isFreeMoving = true;
+            $this->blocksAround = null;
             foreach($this->getBlocksAround() as $block ) {
-                //var_dump($block->getName());
+                //var_dump('blocksAround', $block->getName());
             }
-
+            // try to get the bottom blockId
+            $blockTemp = $this->level->getBlock($this->getPosition());
+            $downSideId = $blockTemp->getSide(0)->getId();
+            //var_dump('downSideId', $downSideId);
         }
         return true;
     }
