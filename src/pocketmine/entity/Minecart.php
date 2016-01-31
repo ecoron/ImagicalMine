@@ -50,6 +50,7 @@ class Minecart extends Vehicle{
     public $moveSpeed = 0.4;
 
     public $isFreeMoving = false;
+    public $isLinked = false;
 
     public function initEntity(){
         $this->setMaxHealth(1);
@@ -72,13 +73,7 @@ class Minecart extends Vehicle{
 
         $hasUpdate = false;
 
-        //workaround to give it a short livetime, sould removed until it's breakable
-        if($this->age > 1200){
-            $this->kill();
-            $hasUpdate = true;
-        }
-
-        if($this->isAlive()){
+        if($this->isLinked || $this->isAlive()){
             $this->motionY -= $this->gravity;
 
             if($this->checkObstruction($this->x, $this->y, $this->z)){
@@ -108,7 +103,9 @@ class Minecart extends Vehicle{
                 $this->isFreeMoving = false;
             }
         }else{
-            parent::onUpdate($currentTick);
+            if($this->isLinked == false) {
+                parent::onUpdate($currentTick);
+            }
         }
 
         $this->timings->stopTiming();
@@ -166,10 +163,18 @@ class Minecart extends Vehicle{
     }
 
     public function onPlayerAction(Player $player, $playerAction) {
-        //override in specific item class
-        //if ($playerAction == PlayerActionPacket::ACTION_JUMP) {
-        //do something
-        //}
+        if($playerAction == 1) {
+          //pressed move button
+          $this->isLinked = true;
+          $this->isMoving = true;
+          $this->isFreeMoving = true;
+          $this->setHealth($this->getMaxHealth());
+        } else {
+          //touched
+          $this->isLinked = false;
+          $this->isMoving = false;
+          $this->isFreeMoving = false;
+        }
         return true;
     }
 }

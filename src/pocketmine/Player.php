@@ -2013,6 +2013,7 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 			case ProtocolInfo::MOVE_PLAYER_PACKET:
 				if($this->linkedEntity instanceof Entity){
 					$entity = $this->linkedEntity;
+					$entity->onPlayerAction($player, ProtocolInfo::MOVE_PLAYER_PACKET);
 					if($entity instanceof Boat){
 						$entity->setPosition($this->temporalVector->setComponents($packet->x, $packet->y - 0.5, $packet->z));
 					}
@@ -2544,22 +2545,23 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 				){
 					$cancelled = true;
 				}
-				$target->onPlayerAction($target, $this, $packet->action);
+				$target->onPlayerAction($this, $packet->action);
+				// @todo move this to the entity
 				if($target instanceof Boat or $target instanceof Minecart){
 					if($packet->action === 1){
 						$this->linkEntity($target);
-						if($target instanceof Minecart) $target->isFreeMoving = true;
+						//if($target instanceof Minecart) $target->isFreeMoving = true;
 					}elseif($packet->action === 2){
 						if($this->linkedEntity == $target){
 							$target->setLinked(0, $this);
 						}
-						if($target instanceof Minecart){
-							$target->isFreeMoving = false;
-						}
+						//if($target instanceof Minecart){
+						//	$target->isFreeMoving = false;
+						//}
 						$target->close();
 					}elseif($packet->action === 3){
 						$this->setLinked(0, $target);
-						if($target instanceof Minecart) $target->isFreeMoving = false;
+						//if($target instanceof Minecart) $target->isFreeMoving = false;
 					}
 					return;
 				}
