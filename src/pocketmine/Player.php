@@ -2500,7 +2500,8 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 						}
 						break;
 					case PlayerActionPacket::ACTION_JUMP:
-					    if($target instaceof Entity) {
+					    $target = $this->level->getBlock($pos);
+					    if($target instanceof Entity) {
 					        $target->onPlayerAction($this, PlayerActionPacket::ACTION_JUMP);
 					    }
 					    break;

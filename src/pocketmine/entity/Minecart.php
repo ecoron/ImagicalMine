@@ -173,7 +173,7 @@ class Minecart extends Vehicle{
           $this->isFreeMoving = true;
           $this->setHealth($this->getMaxHealth());
           $player->linkEntity($this);
-        } elseif(in_array($playerAction, array(2,3)) || $playerAction == PlayerActionPacket::ACTION_JUMP) {
+        } elseif(in_array($playerAction, array(2,3) || $playerAction == PlayerActionPacket::ACTION_JUMP) || $playerAction == PlayerActionPacket::ACTION_JUMP) {
           //touched
           $this->isLinked = false;
           $this->isMoving = false;
