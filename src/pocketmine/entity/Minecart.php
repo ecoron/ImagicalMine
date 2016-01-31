@@ -24,6 +24,8 @@
 */
 namespace pocketmine\entity;
 
+use pocketmine\network\protocol\PlayerActionPacket;
+
 use pocketmine\network\protocol\AddEntityPacket;
 use pocketmine\Player;
 use pocketmine\event\entity\EntityDamageEvent;
@@ -171,7 +173,7 @@ class Minecart extends Vehicle{
           $this->isFreeMoving = true;
           $this->setHealth($this->getMaxHealth());
           $player->linkEntity($this);
-        } elseif(in_array($playerAction, array(2,3))) {
+        } elseif(in_array($playerAction, array(2,3)) || $playerAction == PlayerActionPacket::ACTION_JUMP) {
           //touched
           $this->isLinked = false;
           $this->isMoving = false;
@@ -180,15 +182,25 @@ class Minecart extends Vehicle{
         } else {
             //playerMove
             $this->isFreeMoving = true;
-            $this->blocksAround = null;
-            foreach($this->getBlocksAround() as $block ) {
-                //var_dump('blocksAround', $block->getName());
-            }
             // try to get the bottom blockId
-            $blockTemp = $this->level->getBlock($this->getPosition());
-            $downSideId = $blockTemp->getSide(0)->getId();
-            //var_dump('downSideId', $downSideId);
+            $position = $this->getPosition();
+            $blockTemp = $this->level->getBlock($position);
+            if($blockTemp->getId() == 66) {
+                //we are on rail
+                $connected = $blockTemp->check($blockTemp);
+                //var_dump('rails around', $connected);
+                if(count($connected) >= 1){
+                    $player->setSpeed(0.1);
+                    foreach($connected as $newPosition) {
+                        if($this->oldPosition !=  $newPosition) {
+                            $player->teleport($newPosition);
+                        }
+                    }
+                }
+            }
+
         }
         return true;
     }
+
 }

@@ -2499,6 +2499,11 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 							$this->setSneaking(false);
 						}
 						break;
+					case PlayerActionPacket::ACTION_JUMP:
+					    if($target instaceof Entity) {
+					        $target->onPlayerAction($this, PlayerActionPacket::ACTION_JUMP);
+					    }
+					    break;
 				}
 				$this->startAction = -1;
 				$this->setDataFlag(self::DATA_FLAGS, self::DATA_FLAG_ACTION, false);
@@ -2526,7 +2531,7 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 				}
 				$this->inventory->sendContents($this);
 				$target = $this->level->getBlock($vector);
-				$tile = $this->level->getTile($vector);
+    				$tile = $this->level->getTile($vector);
 				$this->level->sendBlocks([$this], [$target], UpdateBlockPacket::FLAG_ALL_PRIORITY);
 				$this->inventory->sendHeldItem($this);
 				if($tile instanceof Spawnable){
