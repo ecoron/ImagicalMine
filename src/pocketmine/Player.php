@@ -2547,7 +2547,8 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 				}
 				$target->onPlayerAction($this, $packet->action);
 				// @todo move this to the entity
-				if($target instanceof Boat or $target instanceof Minecart){
+				//if($target instanceof Boat or $target instanceof Minecart){
+				if($target instanceof Boat) {
 					if($packet->action === 1){
 						$this->linkEntity($target);
 						//if($target instanceof Minecart) $target->isFreeMoving = true;

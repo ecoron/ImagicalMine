@@ -169,11 +169,16 @@ class Minecart extends Vehicle{
           $this->isMoving = true;
           $this->isFreeMoving = true;
           $this->setHealth($this->getMaxHealth());
+          foreach($this->getBlocksAround() as $block ) {
+              //var_dump($block->getName());
+          }
+          $player->linkEntity($this);
         } else {
           //touched
           $this->isLinked = false;
           $this->isMoving = false;
           $this->isFreeMoving = false;
+          $this->setLinked(0, $player);
         }
         return true;
     }
