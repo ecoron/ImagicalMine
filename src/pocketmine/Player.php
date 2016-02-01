@@ -2013,7 +2013,7 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 			case ProtocolInfo::MOVE_PLAYER_PACKET:
 				if($this->linkedEntity instanceof Entity){
 					$entity = $this->linkedEntity;
-					$entity->onPlayerAction($this, ProtocolInfo::MOVE_PLAYER_PACKET);
+					$this->forceMovement = $entity->onPlayerAction($this, ProtocolInfo::MOVE_PLAYER_PACKET);
 					if($entity instanceof Boat){
 						$entity->setPosition($this->temporalVector->setComponents($packet->x, $packet->y - 0.5, $packet->z));
 					}
@@ -2500,11 +2500,11 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
 						}
 						break;
 					case PlayerActionPacket::ACTION_JUMP:
-					    $target = $this->level->getBlock($pos);
-					    if($target instanceof Entity) {
-					        $target->onPlayerAction($this, PlayerActionPacket::ACTION_JUMP);
-					    }
-					    break;
+						if($this->linkedEntity instanceof Entity){
+							$target = $this->linkedEntity;
+							$target->onPlayerAction($this, PlayerActionPacket::ACTION_JUMP);
+						}
+						break;
 				}
 				$this->startAction = -1;
 				$this->setDataFlag(self::DATA_FLAGS, self::DATA_FLAG_ACTION, false);

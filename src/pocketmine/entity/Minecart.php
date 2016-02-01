@@ -179,27 +179,30 @@ class Minecart extends Vehicle{
           $this->isMoving = false;
           $this->isFreeMoving = false;
           $this->setLinked(0, $player);
-        } else {
+        } elseif($playerAction == 157) {
             //playerMove
             $this->isFreeMoving = true;
-            // try to get the bottom blockId
+            // try to get the bottom blockId, as Vector
             $position = $this->getPosition();
             $blockTemp = $this->level->getBlock($position);
-            if($blockTemp->getId() == 66) {
+            if(in_array($blockTemp->getId(),array(27, 28, 66, 126))) {
                 //we are on rail
                 $connected = $blockTemp->check($blockTemp);
-                //var_dump('rails around', $connected);
                 if(count($connected) >= 1){
-                    $player->setSpeed(0.1);
                     foreach($connected as $newPosition) {
-                        if($this->oldPosition !=  $newPosition) {
-                            $player->teleport($newPosition);
+                        $distance = $this->oldPosition->distance($newPosition);
+                        if($distance > 0 && $this->oldPosition != $newPosition) {
+                            $this->oldPosition = $position->add(0,0,0);
+                            $this->setPosition($newPosition);
+                            return $newPosition;
                         }
                     }
                 }
             }
+            return false;
 
         }
+
         return true;
     }
 
