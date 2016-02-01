@@ -179,6 +179,7 @@ class Minecart extends Vehicle{
           $this->isMoving = false;
           $this->isFreeMoving = false;
           $this->setLinked(0, $player);
+          $player->setLinked(0, $this);
         } elseif($playerAction == 157) {
             //playerMove
             $this->isFreeMoving = true;
