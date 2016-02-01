@@ -156,8 +156,7 @@ class Minecart extends Vehicle{
     }
 
     public function getDrops(){
-        // return [ItemItem::get(ItemItem::MINECART, 0, 1)];
-        return [];
+        return [ItemItem::get(ItemItem::MINECART, 0, 1)];
     }
 
     public function getSaveId(){
@@ -173,7 +172,7 @@ class Minecart extends Vehicle{
           $this->isFreeMoving = true;
           $this->setHealth($this->getMaxHealth());
           $player->linkEntity($this);
-        } elseif(in_array($playerAction, array(2,3) || $playerAction == PlayerActionPacket::ACTION_JUMP) || $playerAction == PlayerActionPacket::ACTION_JUMP) {
+        } elseif(in_array($playerAction, array(2,3)) || $playerAction == PlayerActionPacket::ACTION_JUMP) {
           //touched
           $this->isLinked = false;
           $this->isMoving = false;
@@ -190,8 +189,7 @@ class Minecart extends Vehicle{
                 $connected = $blockTemp->check($blockTemp);
                 if(count($connected) >= 1){
                     foreach($connected as $newPosition) {
-                        $distance = $this->oldPosition->distance($newPosition);
-                        if($distance > 0 && $this->oldPosition != $newPosition) {
+                        if($this->oldPosition != $newPosition || count($connected) == 1) {
                             $this->oldPosition = $position->add(0,0,0);
                             $this->setPosition($newPosition);
                             return $newPosition;
