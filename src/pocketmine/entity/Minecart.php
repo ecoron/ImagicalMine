@@ -53,6 +53,7 @@ class Minecart extends Vehicle{
 
     public $isFreeMoving = false;
     public $isLinked = false;
+    public $oldPosition = null;
 
     public function initEntity(){
         $this->setMaxHealth(1);
