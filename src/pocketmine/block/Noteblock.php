@@ -106,7 +106,9 @@ class Noteblock extends Solid implements RedstoneConsumer{
 	}
 
 	public function onUpdate($type){
-		$this->downSideId = $this->getSide(0)->getId();
+		if($this->downSideId == null) {
+			$this->downSideId = $this->getSide(0)->getId();
+		}
 		return parent::onUpdate($type);
 	}
 
