@@ -33,7 +33,7 @@ class GlowingObsidian extends Solid{
 
 	protected $id = self::GLOWING_OBSIDIAN;
 
-	public function __construct($meta = 0){
+	public function __construct(int $meta = 0){
 		$this->meta = $meta;
 	}
 
@@ -54,7 +54,7 @@ class GlowingObsidian extends Solid{
  	} 
  	
  	public function getDrops(Item $item){
- 		if($item->isPickaxe() >= Tool::TIER_DIAMOND){ 
+ 		if($item->isPickaxe() >= Tool::TIER_WOODEN){ 
  			return [ 
  				[Item::OBSIDIAN, 0, 1], 
  			]; 

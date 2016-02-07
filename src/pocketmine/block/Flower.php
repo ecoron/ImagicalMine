@@ -44,7 +44,7 @@ class Flower extends Flowable{
 
 	protected $id = self::RED_FLOWER;
 
-	public function __construct($meta = 0){
+	public function __construct(int $meta = 0){
 		$this->meta = $meta;
 	}
 
@@ -94,8 +94,6 @@ class Flower extends Flowable{
 		return false;
 	}
         public function getDrops(Item $item){
-            return [
-				[$this->id, $this->meta, 1]
-			];
+            return [$this->id, $this->meta, 1];
         }
 }

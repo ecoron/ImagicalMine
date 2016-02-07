@@ -86,7 +86,7 @@ class WoodenButton extends Flowable implements Redstone,RedstoneSwitch{
 		if($type === Level::BLOCK_UPDATE_SCHEDULED){
 			$this->togglePowered();
 			$this->BroadcastRedstoneUpdate(Level::REDSTONE_UPDATE_BREAK,16);
-			return;
+			return true;
 		}
 		elseif($type === Level::BLOCK_UPDATE_NORMAL){
 			$lookDirection = [
@@ -104,7 +104,7 @@ class WoodenButton extends Flowable implements Redstone,RedstoneSwitch{
 				return Level::BLOCK_UPDATE_NORMAL;
 			}
 		}
-		return;
+		return false;
 	}
 
 	public function place(Item $item, Block $block, Block $target, $face, $fx, $fy, $fz, Player $player = null){
@@ -126,6 +126,7 @@ class WoodenButton extends Flowable implements Redstone,RedstoneSwitch{
 			$this->togglePowered();
 			$this->BroadcastRedstoneUpdate(Level::REDSTONE_UPDATE_PLACE,$this->getPower());
 			$this->getLevel()->scheduleUpdate($this, 50);
+			return true;
 		}
 		
 		return true;

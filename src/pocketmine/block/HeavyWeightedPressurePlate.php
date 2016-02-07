@@ -33,7 +33,7 @@ class HeavyWeightedPressurePlate extends WoodenPressurePlate{
 
 	protected $id = self::HEAVY_WEIGHTED_PRESSURE_PLATE;
 
-	public function __construct($meta = 0){
+	public function __construct(int $meta = 0){
 		$this->meta = $meta;
 	}
 	
@@ -51,9 +51,7 @@ class HeavyWeightedPressurePlate extends WoodenPressurePlate{
 
 	public function getDrops(Item $item){
 		if($item->isPickaxe()){
-			return [
-				[$this->id, 0, 1]
-			];
+			return [$this->id, 0, 1];
 		}
 		return [];
 	}
